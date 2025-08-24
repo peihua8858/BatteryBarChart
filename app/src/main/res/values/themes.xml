@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.HwSystemManager" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="power_history_sub_header_style" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">?android:attr/textColorSecondary</item>
+        <item name="android:ellipsize">end</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:fontFamily">HwChinese-medium</item>
+    </style>
+</resources>

@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="purple_200">#FFBB86FC</color>
+    <color name="purple_500">#FF6200EE</color>
+    <color name="purple_700">#FF3700B3</color>
+    <color name="teal_200">#FF03DAC5</color>
+    <color name="teal_700">#FF018786</color>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <color name="battery_bubble_bg">#4d4d4d</color>
+    <color name="battery_chart_bg_bottom">#666daced</color>
+    <color name="battery_chart_bg_top">#666daced</color>
+    <color name="battery_chart_bottom">#6daced</color>
+    <color name="battery_chart_set">#f2f2f2</color>
+    <color name="battery_chart_top">#6daced</color>
+    <color name="battery_not_select_bg">#00e3e3e3</color>
+    <color name="battery_not_select_bg_bottom">#e3e3e3</color>
+    <color name="battery_not_select_bg_bottom_card">#e3e3e3</color>
+    <color name="battery_not_select_bg_top">#99e3e3e3</color>
+    <color name="battery_not_select_set">#e3e3e3</color>
+    <color name="hsm_widget_canvas_charge_line_alpha10">#0066da67</color>
+    <color name="hsm_widget_canvas_charge_line_alpha10_card">#0064bb5c</color>
+    <color name="hsm_widget_canvas_charge_line_alpha50">#7366da67</color>
+    <color name="hsm_widget_canvas_charge_line_alpha50_card">#6664bb5c</color>
+    <color name="hsm_widget_canvas_charge_line_new">#47cc47</color>
+    <color name="hsm_widget_canvas_charge_line_new_card">#64bb5c</color>
+    <color name="hsm_widget_canvas_degree_line">#ff01c1f2</color>
+    <color name="hsm_widget_canvas_degree_line_alpha10">#1a5cacff</color>
+    <color name="hsm_widget_canvas_degree_line_alpha10_card">#000a59f7</color>
+    <color name="hsm_widget_canvas_degree_line_alpha30">#4d01c1f2</color>
+    <color name="hsm_widget_canvas_degree_line_alpha50">#7f5cacff</color>
+    <color name="hsm_widget_canvas_degree_line_alpha50_card">#4d0a59f7</color>
+    <color name="hsm_widget_canvas_degree_line_new">#5cacff</color>
+    <color name="hsm_widget_canvas_degree_point">#ffffffff</color>
+    <color name="hsm_widget_canvas_no_charge_line_alpha10">#00007dff</color>
+    <color name="hsm_widget_canvas_no_charge_line_alpha10_card">#000a59f7</color>
+    <color name="hsm_widget_canvas_no_charge_line_alpha50">#4d007dff</color>
+    <color name="hsm_widget_canvas_no_charge_line_alpha50_card">#4d0a59f7</color>
+    <color name="hsm_widget_canvas_no_charge_line_new">#01a1fe</color>
+    <color name="hsm_widget_canvas_no_charge_line_new_card">#0a59f7</color>
+    <color name="hsm_widget_circleview_green">#ff2dd474</color>
+    <color name="hsm_widget_circleview_red">#99ff401a</color>
+    <color name="hsm_widget_circleview_startcolor">#ff846df8</color>
+    <color name="hsm_widget_circleview_startcolor_hm">#7b79f7</color>
+    <color name="hsm_widget_circleview_yellow">#ffff8c1a</color>
+    <color name="hsm_widget_disable">#ff7c7c7c</color>
+    <color name="hsm_widget_enable">#fff0460e</color>
+
+    <color name="stroke_bottom_line_color">#1a000000</color>
+    <color name="stroke_bottom_line_color_card">#1a000000</color>
+    <color name="stroke_line_color">#0d000000</color>
+    <color name="stroke_line_color_card">#0d000000</color>
+    <color name="stroke_y_line_color_card">#33000000</color>
+    <color name="charge_rect_color">#47cc47</color>
+</resources>

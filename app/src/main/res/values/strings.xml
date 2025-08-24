@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">HwSystemManager</string>
+    <string name="power_5G_network_optimize_des">5G 网络已关闭</string>
+    <string name="power_always_on_display_des">熄屏显示已开启，关闭可省电</string>
+    <string name="power_always_on_display_optimize_des">熄屏显示已关闭</string>
+    <string name="power_battery_available_time">预计继续使用 %1$s %2$s</string>
+    <string name="power_battery_available_time_single">预计继续使用 %1$s</string>
+    <string name="power_battery_charge_time">预计 %1$s %2$s 充满</string>
+    <string name="power_battery_charge_time_single">预计 %1$s 充满</string>
+    <string name="power_battery_choose_info">%1$s 至 %2$s，电池电量 %3$s 到 %4$s</string>
+    <string name="power_battery_choose_time">%1$s - %2$s</string>
+    <string name="power_battery_choose_time_blind">%1$s 至 %2$s</string>
+    <string name="power_battery_detail_back_consume">后台占用时长/耗电量</string>
+    <string name="power_battery_detail_fore_consume">前台占用时长/耗电量</string>
+    <string name="power_battery_detail_twinapp_tips">分身应用的时长/耗电量和主应用一致</string>
+    <string name="power_battery_fast_charing">正在快速充电</string>
+    <string name="power_battery_history_chart_date_format">%1$s (%2$s)</string>
+    <string name="power_battery_history_des">电量使用情况</string>
+    <string name="power_battery_history_two_days_des">最近 %d 天电量使用情况</string>
+    <string name="power_battery_hot_spot">个人热点</string>
+    <string name="power_battery_percentage_switch_title">显示电量百分比</string>
+    <string name="power_battery_percentage_title">电量百分比显示方式</string>
+    <string name="power_battery_super_charing">正在超级快充</string>
+    <string name="charge_time">充电时段</string>
+    <string name="battery_level">电池电量</string>
+    <string name="screen_on_time_today">今日亮屏时长</string>
+</resources>
