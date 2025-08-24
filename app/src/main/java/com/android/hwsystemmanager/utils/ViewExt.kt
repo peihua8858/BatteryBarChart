@@ -11,7 +11,6 @@ import androidx.annotation.Keep
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.android.hwsystemmanager.widgets.createPaint
 import com.android.settings.util.fontScale
 import com.android.settings.util.isLandscape
 import java.util.Locale

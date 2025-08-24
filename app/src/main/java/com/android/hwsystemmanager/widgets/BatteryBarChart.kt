@@ -30,6 +30,7 @@ import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
 import androidx.core.graphics.withScale
+import com.android.hwsystemmanager.utils.measureTextSize
 
 class BatteryBarChart @JvmOverloads constructor(
     context: Context?,
@@ -654,10 +655,10 @@ class BatteryBarChart @JvmOverloads constructor(
      */
     private fun drawBubble(canvas: Canvas, bubbleView: BubbleView) {
         val path = Path()
-        val pointY = bubbleView.f22160h
+        val pointY = bubbleView.mStartY
         Logcat.d("BubbleView", "pointY is $pointY")
 
-        val startX = bubbleView.f22159g
+        val startX = bubbleView.mStartX
         path.moveTo(startX, pointY)
 
         val halfWidth = bubbleView.f22165m.toFloat()
@@ -669,7 +670,7 @@ class BatteryBarChart @JvmOverloads constructor(
         val arrowHeight = bubbleView.f22163k
         val minX = bubbleView.f22155c
         val paddingLeft = bubbleView.f22169q
-        val bubbleHeight = bubbleView.f22168p
+        val bubbleHeight = bubbleView.mRadius
 
         // 计算气泡路径
         val (pathX, pathY) = calculateBubblePath(
@@ -681,13 +682,15 @@ class BatteryBarChart @JvmOverloads constructor(
         path.lineTo(pathX, pathY)
 
         // 绘制向下三角形尖角（指向条形图）
-        val actualCenterX = startX + halfWidth / 2
-        val triangleTop = adjustedTopY+100
-        val triangleBottom = triangleTop + arrowHeight*3
+        val bubbleWidth = startX+pathX
+        val arrowSize =arrowHeight*2/3f
+        val actualCenterX = bubbleWidth / 2f
+        val triangleTop = adjustedTopY
+        val triangleBottom = triangleTop + arrowSize
         val triangleCenterX = actualCenterX
 
-        path.moveTo(triangleCenterX - arrowHeight*3, triangleTop)
-        path.lineTo(triangleCenterX + arrowHeight*3, triangleTop)
+        path.moveTo(triangleCenterX - arrowSize, triangleTop)
+        path.lineTo(triangleCenterX + arrowSize, triangleTop)
         path.lineTo(triangleCenterX, triangleBottom)
         path.close()
 
@@ -871,10 +874,10 @@ class BatteryBarChart @JvmOverloads constructor(
         dLog { ">>>rectF:$rectF" }
         if (bubbleView.f22158f) {
             canvas.withScale(-1f, 1f, rectF.centerX(), rectF.centerY()) {
-                drawText(bubbleView.f22161i, rectF.left, centerY, paint)
+                drawText(bubbleView.mText, rectF.left, centerY, paint)
             }
         } else {
-            canvas.drawText(bubbleView.f22161i, rectF.left + padding, centerY, paint)
+            canvas.drawText(bubbleView.mText, rectF.left + padding, centerY, paint)
         }
     }
 
