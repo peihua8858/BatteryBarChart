@@ -1,5 +1,6 @@
 package com.android.hwsystemmanager;
 
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
@@ -88,7 +89,7 @@ public final class BatteryStackBarData {
         this.barType = 1;
         this.chargingStatus = levelAndCharge.getCharge();
         this.barWidth = width * BAR_WIDTH_RATIO;
-        this.barOffset = 0/*width * BAR_OFFSET_RATIO*/;
+        this.barOffset = width * BAR_OFFSET_RATIO;
 
         // 初始化绘制工具
         this.fillPaint = new Paint();
@@ -367,6 +368,50 @@ public final class BatteryStackBarData {
         canvas.drawPath(fillPath, fillPaint);
     }
 
+    public void drawCurve(Canvas canvas, boolean isCharge, int i4, Path path, int i8) {
+        LevelAndCharge levelAndCharge = this.levelAndCharge;
+        Logcat.d("BatteryStackBarData", "level is ${levelAndCharge.level} --charging : $isCharge");
+//        m11671c();
+        int f10 = (100 - levelAndCharge.getLevel());
+        float f11 = this.width;
+        float f12 = 100f;
+        float f13 = this.y;
+        float f14 = ((f10 * f11) / f12) + f13;
+        float f15 = (((100 - i4) * f11) / f12) + f13;
+        float f16 = this.barOffset / 2;
+        float f17 = this.x;
+        float f18 = f17 - f16;
+        float f19 = (f17 + this.width) - f16;
+        if (i8 != 1) {
+            if (i8 != 2) {
+                Paint paint = this.f19398n;
+                if (i8 != 3) {
+                    if (i8 == 4) {
+                        path.moveTo(f18, f15);
+                        path.lineTo(f19, f14);
+                        canvas.drawPath(path, paint);
+                    }
+                } else {
+                    path.lineTo(f19, f14);
+                    canvas.drawPath(path, paint);
+                }
+            } else {
+                path.lineTo(f19, f14);
+            }
+        } else {
+            path.moveTo(f18, f15);
+            path.lineTo(f19, f14);
+        }
+        Path path2 = new Path();
+        path2.moveTo(f18, f15);
+        path2.lineTo(f19, f14);
+        float f20 = f13 + f11;
+        path2.lineTo(f19, f20);
+        path2.lineTo(f18, f20);
+        path2.close();
+        canvas.drawPath(path2, this.f19397m);
+    }
+
     /**
      * 绘制曲线
      */
@@ -484,7 +529,70 @@ public final class BatteryStackBarData {
         this.showBubble = selected;
         updatePaints();
     }
+    /* renamed from: m */
+    public  Paint f19397m;
 
+    /* renamed from: n */
+    public  Paint f19398n;
+
+    /* renamed from: o */
+    public  Paint f19399o;
+//    public final void m11671c() {
+//        LinearGradient m11670b;
+//        int color;
+//        int i4 = this.barType;
+//        Paint paint =this.f19397m;
+//        Paint paint2 = this.f19398n;
+//        Context context =MainApplication.getContext();
+//        if (i4 != 0) {
+//            if (i4 == 1) {
+//                String str = this.chargingStatus;
+//                if (!C4130i.m10301a(str, "true")) {
+//                    m11670b = m11670b(context.getResources().getColor(this.f19401q), context.getResources().getColor(this.f19402r));
+//                } else {
+//                    m11670b = m11670b(context.getResources().getColor(this.f19403s),context.getResources().getColor(this.f19404t));
+//                }
+//                paint.setShader(m11670b);
+//                if (!C4130i.m10301a(str, "true")) {
+//                    color =context.getResources().getColor(this.f19405u);
+//                } else {
+//                    color =context.getResources().getColor(this.f19406v);
+//                }
+//                paint2.setColor(color);
+//            }
+//            LinearGradient m11670b2 = m11670b(context.getResources().getColor(R.color.battery_chart_set),context.getResources().getColor(R.color.battery_chart_set));
+//            Paint paint3 = this.f19399o;
+//            paint3.setShader(m11670b2);
+//            paint3.setAntiAlias(true);
+//            paint.setAntiAlias(true);
+//            paint2.setAntiAlias(true);
+//            paint2.setStyle(Paint.Style.STROKE);
+//            paint2.setStrokeJoin(Paint.Join.ROUND);
+//            paint2.setStrokeWidth(C4253e.m10476a(2.0f));
+//        }
+//        paint.setShader(m11670b(context.getResources().getColor(R.color.battery_not_select_bg),context.getResources().getColor(R.color.battery_not_select_bg)));
+//        Resources resources =context.getResources();
+//        int valueOf = R.color.battery_not_select_bg_bottom;
+//        int valueOf2 = R.color.battery_not_select_bg_bottom_card;
+//        if (C5820e.f22494a) {
+//            valueOf = valueOf2;
+//        }
+//        paint2.setColor(resources.getColor((int) valueOf));
+//        LinearGradient m11670b22 = m11670b(context.getResources().getColor(R.color.battery_chart_set),context.getResources().getColor(R.color.battery_chart_set));
+//        Paint paint32 = this.f19399o;
+//        paint32.setShader(m11670b22);
+//        paint32.setAntiAlias(true);
+//        paint.setAntiAlias(true);
+//        paint2.setAntiAlias(true);
+//        paint2.setStyle(Paint.Style.STROKE);
+//        paint2.setStrokeJoin(Paint.Join.ROUND);
+//        paint2.setStrokeWidth(C4253e.m10476a(2.0f));
+//    }
+    public final LinearGradient m11670b(int i4, int i8) {
+        float f10 = this.x;
+        float f11 = this.y;
+        return new LinearGradient(f10, f11, f10 + this.barWidth, f11 + this.height, i4, i8, Shader.TileMode.CLAMP);
+    }
     @Override
     public String toString() {
         return "BatteryStackBarData{" +

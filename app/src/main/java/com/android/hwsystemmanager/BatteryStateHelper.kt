@@ -68,8 +68,8 @@ object BatteryStateHelper {
                 arrayList.add(LevelAndCharge((100 - i / 2f - 10).roundToInt(), "false", sTime))
                 arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 10).roundToInt(), "false", nextTime))
             } else {
-                arrayList.add(LevelAndCharge((70 + i / 2f - 30).roundToInt(), "true", sTime))
-                arrayList.add(LevelAndCharge((70 + (i+1) / 2f - 30).roundToInt(), "true", nextTime))
+                arrayList.add(LevelAndCharge((80 + i / 2f).roundToInt(), "true", sTime))
+                arrayList.add(LevelAndCharge((80 + (i+1) / 2f).roundToInt(), "true", nextTime))
             }
         }
         dLog { ">>>>result:"+ Gson().toJson(arrayList) }

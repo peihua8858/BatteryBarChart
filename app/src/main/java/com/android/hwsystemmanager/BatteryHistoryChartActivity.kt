@@ -13,7 +13,7 @@ class BatteryHistoryChartActivity : ComponentActivity() {
         setContentView(binding.root)
         val time = BatteryStatisticsHelper.m934d()
         dLog { "time:$time" }
-        val result = BatteryStateHelper.fakeData((time + 60000) - 86400000, 86400000L)
+        val result = BatteryStateHelper.fakeData((time) - 86400000, 86400000L)
         binding.apply {
             batteryStackBar.setListData(result)
             batteryStackChart.setData(result)

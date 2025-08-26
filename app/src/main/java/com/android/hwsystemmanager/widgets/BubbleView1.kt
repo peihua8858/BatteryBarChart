@@ -1,23 +1,21 @@
 package com.android.hwsystemmanager.widgets
 
 import android.content.Context
-import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Build
-import com.android.hwsystemmanager.utils.AttributeParseUtils
-import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.SelectedItem
+import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.Logcat
+import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.isLayoutRtl
-import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.r
 import com.android.hwsystemmanager.utils.v
 import com.android.settings.util.dp2px
 import kotlin.math.max
 
-class BubbleView(context: Context, selectedItem: SelectedItem) {
+class BubbleView1(context: Context, selectedItem: SelectedItem) {
     @JvmField
     val f22153a: Paint
     @JvmField
@@ -25,17 +23,17 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
     @JvmField
     val f22155c: Float
     @JvmField
-    val screenWidth: Float
+    val f22156d: Float
     @JvmField
     val f22157e: Float
     @JvmField
     val f22158f: Boolean
     @JvmField
-    val mStartX: Float
+    val startX: Float
     @JvmField
-    val mStartY: Float
+    val startY: Float
     @JvmField
-    var mText: String
+    var f22161i: String
     @JvmField
     val f22162j: Float
     @JvmField
@@ -49,7 +47,7 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
     @JvmField
     val f22167o: Int
     @JvmField
-    val mRadius: Int
+    val f22168p: Int
     @JvmField
     val f22169q: Float
     @JvmField
@@ -66,7 +64,7 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         val paint = Paint(1)
         paint.isAntiAlias = true
         paint.style = Paint.Style.FILL
-        paint.color = Color.BLACK//AttributeParseUtils.m14218a(33620238, false)
+        paint.color = AttributeParseUtils.m14218a(33620238, false)
         this.f22153a = paint
         val paint2 = Paint(1)
         paint2.isAntiAlias = true
@@ -83,48 +81,47 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         }
         this.f22155c = m14219b
         val m14219b2 = if (z10) 0.0f else AttributeParseUtils.m14219b(33620170)
-        val screenWidth = selectedItem.screenWidth
-        this.screenWidth = screenWidth
-        this.f22157e = screenWidth - m14219b2
+        val f10 = selectedItem.screenWidth
+        this.f22156d = f10
+        this.f22157e = f10 - m14219b2
         this.f22158f = isLayoutRtl
+        this.f22161i = ""
         this.f22165m = context.dp2px(7)
         this.f22166n = context.dp2px(7)
-        val m10476a = context.dp2px(12)
+        val m10476a: Int = context.dp2px(12)
         this.f22167o = m10476a
-        val radius: Int = context.dp2px(8)
-        this.mRadius = radius
-        this.f22169q = (-m14219b) / 2f
+        val m10476a2: Int = context.dp2px(8)
+        this.f22168p = m10476a2
+        val f11 = 2f
+        this.f22169q = (-m14219b) / f11
         this.f22172t = RectF()
         val m10476a3: Int = context.dp2px(24)
         this.f22173u = m10476a3
         val m11216d: String = TimeUtil.m11216d(selectedItem.state, selectedItem.time)
-        this.mText = m11216d
-        paint2.textSize = context.dp2px(14f)
+        this.f22161i = m11216d
         if (context.v() || context.r()) {
             paint2.textSize = 76.0f
         }
-        val pair = paint2.measureTextSize(m11216d)
-        val width = pair.first.toFloat()
-        Logcat.d("BatteryHistoryChartPaintFactory", "width is $width，m11216d:$m11216d")
+        val rect = Rect()
+        paint2.getTextBounds(m11216d, 0, m11216d.length, rect)
+        val width = rect.width().toFloat()
+        Logcat.d("BatteryHistoryChartPaintFactory", "width is $width")
         this.f22162j = width
-        val height = pair.second.toFloat()
+        val rect2 = Rect()
+        paint2.getTextBounds(m11216d, 0, m11216d.length, rect2)
+        val height = rect2.height().toFloat()
         Logcat.d("BatteryHistoryChartPaintFactory", "height is $height")
         this.f22163k = height
-        this.mStartX = selectedItem.startX
-        this.mStartY = selectedItem.startY
+        this.startX = selectedItem.startX
+        this.startY = selectedItem.startY
         Logcat.d("BubbleView", "text is $m11216d")
-        val f12 = radius.toFloat()
-        val f13 = (height / 2f) + f12
+        val f12 = m10476a2.toFloat()
+        val f13 = (height / f11) + f12
         this.f22170r = f13
         this.f22171s = f13
-        val f14 = (f13 * 2f) + width + m10476a
+        val f14 = (f13 * f11) + width + m10476a
         this.f22164l = f14
         this.f22173u = max(m10476a3, (f12 + height).toInt())
         Logcat.d("BubbleView", "bubbleWidth is $f14")
     }
-
-    val width: Float
-        get() = /*f22173u * 2f +*/ f22162j
-    val height: Float
-        get() = f22173u * 2 + f22163k
 }

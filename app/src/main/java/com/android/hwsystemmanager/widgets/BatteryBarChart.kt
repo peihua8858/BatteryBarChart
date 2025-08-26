@@ -37,33 +37,60 @@ class BatteryBarChart @JvmOverloads constructor(
     attributeSet: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : View(context, attributeSet, defStyleAttr) {
+    @JvmField
     var f9893A: Float = 0f
+    @JvmField
     var f9894B: Float = 0f
+    @JvmField
     var mCallBack: BatterHistoryUtils.b? = null
     var slideListener: BatterHistoryUtils.a? = null
+    @JvmField
     var mSelectIndex: Int = -1
+    @JvmField
     var mNumLists: ArrayList<LevelAndCharge> = ArrayList()
+    @JvmField
     var mBarLists: ArrayList<BatteryStackBarData> = ArrayList()
+    @JvmField
     var mIsHalfHour: Int = 0
+    @JvmField
     var lastIndex: Int = 0
+    @JvmField
     var f9902h: Int = 0
+    @JvmField
     var f9903i: Float = 0f
+    @JvmField
     var f9904j: Float = 0f
+    @JvmField
     val f9905k: Float = resources.getDimension(R.dimen.battery_history_chart_bottom_padding)
+    @JvmField
     var f9906l: Float = 0f
+    @JvmField
     var f9907m: Float = 0f
+    @JvmField
     var f9908n: Float = 0f
+    @JvmField
     var f9909o: Float = 0f
+    @JvmField
     var mWidth: Int = 0
+    @JvmField
     var f9911q: Float = 0.0f
+    @JvmField
     var f9912r: Float = 0f
+    @JvmField
     val f9913s: ArrayList<Int> = ArrayList()
+    @JvmField
     var f9914t: Float = 0f
+    @JvmField
     var f9915u: Int
+    @JvmField
     var f9916v: Int = 0
+    @JvmField
     val f9917w: PointF = PointF()
+    @JvmField
     var f9918x: BarChartTouchHelper? = null
+    @JvmField
     val f9919y: Float = resources.getDimension(R.dimen.margin_bar_top_bubble)
+    @JvmField
     val f9920z: Float = resources.getDimension(R.dimen.battery_chart_height)
 
     init {
@@ -366,11 +393,15 @@ class BatteryBarChart @JvmOverloads constructor(
     public override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         m7041j()
-
+//        DrawBubbleView.drawChart(this,canvas)
         val path = Path()
         var shouldResetPath = true
+        var i4=1
+        var i8=2
         // 第一部分：绘制条形图和连接区域
         for ((index, barItem) in this.mBarLists.withIndex()) {
+             i4=1
+             i8=2
             if (index >= this.f9902h) break
 
             val isCharging = barItem.chargingStatus == "true"
@@ -402,11 +433,12 @@ class BatteryBarChart @JvmOverloads constructor(
             }
             // 第二部分：绘制气泡
             // 修复气泡显示条件：只有当条形图被选中且显示气泡时才绘制
-            if (barItem.showBubble && !m7039f()) {
-                dLog { "barItem.showBubble:${barItem.showBubble},percentageText:${barItem.percentageText},text:${selectedTime}" }
-                drawBubbleView(canvas, barItem, index)
-            }
+//            if (barItem.showBubble && !m7039f()) {
+//                dLog { "barItem.showBubble:${barItem.showBubble},percentageText:${barItem.percentageText},text:${selectedTime}" }
+//                drawBubbleView(canvas, barItem, index)
+//            }
         }
+        DrawBubbleView1.drawBubbleView(this, canvas,i8,i4)
     }
 
     /**
@@ -520,7 +552,8 @@ class BatteryBarChart @JvmOverloads constructor(
             "bubbleStartX is $bubbleStartX, bubbleStartY is $bubbleStartY"
         )
 
-        val selectedItem = SelectedItem(bubbleStartX, bubbleStartY, selectedTime, this.mWidth.toFloat())
+        val selectedItem =
+            SelectedItem(bubbleStartX, bubbleStartY, selectedTime, this.mWidth.toFloat())
         selectedItem.state = this.m7037d(startIndex, endIndex)
 
         if (!ScreenReaderUtils.m10472c()) {
@@ -654,7 +687,7 @@ class BatteryBarChart @JvmOverloads constructor(
      * 绘制气泡
      */
     private fun drawBubble(canvas: Canvas, bubbleView: BubbleView) {
-        val path = Path()
+        var path = Path()
         val pointY = bubbleView.mStartY
         Logcat.d("BubbleView", "pointY is $pointY")
 
@@ -662,7 +695,7 @@ class BatteryBarChart @JvmOverloads constructor(
         path.moveTo(startX, pointY)
 
         val halfWidth = bubbleView.f22165m.toFloat()
-        val endX = startX + halfWidth //* 2
+        val endX = startX + halfWidth * 2
         val topY = pointY - bubbleView.f22166n
         val adjustedTopY = topY - 1.0f
 
@@ -678,24 +711,36 @@ class BatteryBarChart @JvmOverloads constructor(
             startX, halfWidth, minX, paddingLeft, bubbleView.f22170r,
             bubbleView.f22158f, bubbleView.f22167o, bubbleView.screenWidth
         )
-
         path.lineTo(pathX, pathY)
-
-        // 绘制向下三角形尖角（指向条形图）
-        val bubbleWidth = startX+pathX
-        val arrowSize =arrowHeight*2/3f
-        val actualCenterX = bubbleWidth / 2f
-        val triangleTop = adjustedTopY
-        val triangleBottom = triangleTop + arrowSize
-        val triangleCenterX = actualCenterX
-
-        path.moveTo(triangleCenterX - arrowSize, triangleTop)
-        path.lineTo(triangleCenterX + arrowSize, triangleTop)
-        path.lineTo(triangleCenterX, triangleBottom)
         path.close()
-
         // 绘制气泡路径
         canvas.drawPath(path, bubbleView.f22153a)
+        dLog { "BubbleView>>startX:${startX},pointY:$pointY," +
+                "arrowHeight:$arrowHeight,maxX:$maxX,adjustedTopY:$adjustedTopY," +
+                "minX:$minX,startX:$startX,pathX:$pathX" }
+        // 绘制向下三角形尖角（指向条形图）
+//        path = Path()
+//        val bubbleWidth = startX + pathX
+//        val arrowSize = arrowHeight * 2 / 3f
+//        val actualCenterX = bubbleWidth / 2f
+//        val triangleTop = adjustedTopY + 200
+//        val triangleBottom = triangleTop + arrowSize
+//        val triangleCenterX = actualCenterX
+//        dLog { "BubbleView>>triangleCenterX:${triangleCenterX},triangleTop:$triangleTop," +
+//                "arrowHeight:$arrowHeight,bubbleWidth:$bubbleWidth,adjustedTopY:$adjustedTopY," +
+//                "arrowSize:$arrowSize,startX:$startX,pathX:$pathX" }
+//        path.moveTo(triangleCenterX - arrowSize, triangleTop)
+//        path.lineTo(triangleCenterX + arrowSize, triangleTop)
+//        path.lineTo(triangleCenterX, triangleBottom)
+//        dLog {
+//            "BubbleView>>moveTo:[${triangleCenterX - arrowSize},$triangleTop]," +
+//                    "lineTo:[${triangleCenterX + arrowSize},$triangleTop]," +
+//                    "lineTo:[${triangleCenterX},$triangleBottom]"
+//        }
+//        path.close()
+//
+//        // 绘制气泡路径
+//        canvas.drawPath(path, bubbleView.f22153a)
 
         // 绘制气泡内容
         drawBubbleContent(canvas, bubbleView, startX, halfWidth, topY)
@@ -789,7 +834,7 @@ class BatteryBarChart @JvmOverloads constructor(
         endX: Float, maxX: Float, adjustedTopY: Float, topY: Float,
         arrowHeight: Float, bubbleHeight: Int, startX: Float, halfWidth: Float,
         minX: Float, paddingLeft: Float, cornerRadius: Float,
-        isFlipped: Boolean, paddingRight: Int, maxWidth: Float
+        isFlipped: Boolean, paddingRight: Int, maxWidth: Float,
     ): Pair<Float, Float> {
         var pathX = endX
         var pathY: Float
@@ -833,7 +878,7 @@ class BatteryBarChart @JvmOverloads constructor(
      */
     private fun drawBubbleContent(
         canvas: Canvas, bubbleView: BubbleView,
-        startX: Float, halfWidth: Float, topY: Float
+        startX: Float, halfWidth: Float, topY: Float,
     ) {
         val centerX = startX + halfWidth
         val rectF = bubbleView.f22172t
@@ -866,7 +911,29 @@ class BatteryBarChart @JvmOverloads constructor(
 
         // 绘制圆角矩形
         canvas.drawRoundRect(rectF, bubbleView.f22170r, bubbleView.f22170r, bubbleView.f22153a)
+//        val path = Path()
+//        val arrowX = rectF.centerX()
+//        val arrowHeight = bubbleView.f22163k
+//        val arrowSize = arrowHeight/* * 2 / 3f*/
+//        val triangleTop = rectF.bottom - 1f
+//        val triangleBottom = triangleTop + arrowSize
+//        dLog {
+//            "BubbleView>>triangleTop:$triangleTop," +
+//                    "arrowHeight:$arrowHeight,bubbleWidth:$bubbleWidth," +
+//                    "arrowSize:$arrowSize,startX:$startX"
+//        }
+//        path.moveTo(arrowX - arrowSize, triangleTop)
+//        path.lineTo(arrowX + arrowSize, triangleTop)
+//        path.lineTo(arrowX, triangleBottom)
+//        dLog {
+//            "BubbleView>>moveTo:[${arrowX - arrowSize},$triangleTop]," +
+//                    "lineTo:[${arrowX + arrowSize},$triangleTop]," +
+//                    "lineTo:[${arrowX},$triangleBottom]"
+//        }
+//        path.close()
 
+        // 绘制气泡路径
+//        canvas.drawPath(path, bubbleView.f22153a)
         // 绘制文本
         val paint = bubbleView.f22154b
         val fontMetrics = paint.fontMetrics
@@ -1073,11 +1140,12 @@ class BatteryBarChart @JvmOverloads constructor(
         private const val DRAW_TYPE_NEW_PATH = 4
         private const val DRAW_TYPE_CONTINUE = 3
         private const val DRAW_TYPE_END_PATH = 2 // 新增：表示路径结束
-        fun m7032g(index: Int, barData: ArrayList<BatteryStackBarData>): Boolean {
+        @JvmStatic
+        fun m7032g(index: Int, barData: List<BatteryStackBarData>): Boolean {
             return barData[index].levelAndCharge.charge != barData[index - 1].levelAndCharge.charge
         }
-
-        fun m7033h(index: Int, barData: ArrayList<BatteryStackBarData>): Boolean {
+        @JvmStatic
+        fun m7033h(index: Int, barData: List<BatteryStackBarData>): Boolean {
             return barData[index].levelAndCharge.charge != barData[index + 1].levelAndCharge.charge
         }
     }
