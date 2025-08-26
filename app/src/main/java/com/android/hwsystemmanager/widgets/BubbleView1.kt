@@ -1,6 +1,7 @@
 package com.android.hwsystemmanager.widgets
 
 import android.content.Context
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.RectF
@@ -64,14 +65,14 @@ class BubbleView1(context: Context, selectedItem: SelectedItem) {
         val paint = Paint(1)
         paint.isAntiAlias = true
         paint.style = Paint.Style.FILL
-        paint.color = AttributeParseUtils.m14218a(33620238, false)
+        paint.color = Color.BLACK//AttributeParseUtils.m14218a(33620238, false)
         this.f22153a = paint
         val paint2 = Paint(1)
         paint2.isAntiAlias = true
         paint2.style = Paint.Style.FILL
-        val m14218a = AttributeParseUtils.m14218a(android.R.attr.textColorPrimaryInverse, false)
-        paint2.textSize = AttributeParseUtils.m14219b(33620202)
-        paint2.color = m14218a
+//        val m14218a = AttributeParseUtils.m14218a(android.R.attr.textColorPrimaryInverse, false)
+        paint2.textSize = context.dp2px(14f)//AttributeParseUtils.m14219b(33620202)
+        paint2.color = Color.WHITE
         this.f22154b = paint2
         val z10 = Build.VERSION.SDK_INT >= 27
         m14219b = if (z10) {

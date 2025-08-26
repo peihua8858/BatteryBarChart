@@ -4,8 +4,8 @@ import android.graphics.Rect
 import android.os.Bundle
 import androidx.core.view.accessibility.AccessibilityNodeInfoCompat
 import androidx.customview.widget.ExploreByTouchHelper
-import com.android.settings.base.helper.Logcat
-import com.android.settings.battery.view.BatteryBarChart1
+import com.android.hwsystemmanager.utils.Logcat
+import com.android.hwsystemmanager.widgets.BatteryBarChart1
 
 class BarChartTouchHelper1(private val hostView: BatteryBarChart1) : ExploreByTouchHelper(hostView) {
     public override fun getVirtualViewAt(f10: Float, f11: Float): Int {

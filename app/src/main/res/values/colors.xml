@@ -53,4 +53,11 @@
     <color name="stroke_line_color_card">#0d000000</color>
     <color name="stroke_y_line_color_card">#33000000</color>
     <color name="charge_rect_color">#47cc47</color>
+
+    <color name="hsm_widget_canvas_Low_battery_line_alpha10_card">#00FFA6A6</color>
+    <color name="hsm_widget_canvas_Low_battery_line_alpha10">#00FFA6A6</color>
+    <color name="hsm_widget_canvas_Low_battery_line_alpha50">#FFA6A6</color>
+    <color name="hsm_widget_canvas_Low_battery_line_alpha50_card">#FFA6A6</color>
+    <color name="hsm_widget_canvas_Low_battery_line_new">#FF5968</color>
+    <color name="hsm_widget_canvas_Low_battery_line_new_card">#FF5968</color>
 </resources>

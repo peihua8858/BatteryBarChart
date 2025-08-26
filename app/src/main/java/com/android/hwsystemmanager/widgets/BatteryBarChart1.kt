@@ -54,7 +54,8 @@ class BatteryBarChart1 @JvmOverloads constructor(
     @JvmField
     var f9904j: Float = 0f
     @JvmField
-    val f9905k: Float
+    val f9905k: Float = resources.getDimension(R.dimen.battery_history_chart_bottom_padding)
+
     @JvmField
     var f9906l: Float = 0f
     @JvmField
@@ -80,20 +81,18 @@ class BatteryBarChart1 @JvmOverloads constructor(
     val f9917w: PointF
     var f9918x: BarChartTouchHelper1? = null
     @JvmField
-    val f9919y: Float
+    val f9919y: Float = resources.getDimension(R.dimen.margin_bar_top_bubble)
+
     @JvmField
-    val f9920z: Float
+    val f9920z: Float = resources.getDimension(R.dimen.battery_chart_height)
 
     init {
         this.mSelectIndex = -1
         this.mNumLists = ArrayList()
         this.mBarLists = ArrayList()
-        this.f9905k = resources.getDimension(R.dimen.battery_history_chart_bottom_padding)
         this.f9913s = ArrayList()
         this.f9915u = this.mSelectIndex
         this.f9917w = PointF()
-        this.f9919y = resources.getDimension(R.dimen.margin_bar_top_bubble)
-        this.f9920z = resources.getDimension(R.dimen.battery_chart_height)
     }
 
 
@@ -127,7 +126,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
         var z17 = true
         var i9 = 48
         while (i4 < i9) {
-            val f10 = this.f9911q
+            val f10 = this.f9911q//10dp
             val f11 = this.f9912r
             val f12 = (i4 * f11) + f10
             val f13 = this.f9908n
@@ -399,9 +398,9 @@ class BatteryBarChart1 @JvmOverloads constructor(
         )
     }
 
-    public override fun onSizeChanged(i4: Int, i8: Int, i9: Int, i10: Int) {
+    public override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
         val m14219b: Float
-        super.onSizeChanged(i4, i8, i9, i10)
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
         val format = NumberFormat.getPercentInstance().format(100 / 100.0)
         val textPaint =
             createPaint(resources.getDimensionPixelSize(R.dimen.battery_history_chart_dateText_size))
@@ -426,11 +425,10 @@ class BatteryBarChart1 @JvmOverloads constructor(
         this.f9904j = m10476a
         this.f9914t = resources.getDimension(R.dimen.battery_maigin_text_percent) + m11668d
         this.f9910p = width
-        height
         this.f9908n = this.f9919y
-        this.f9909o = i8 - this.f9905k
+        this.f9909o = height - this.f9905k
         this.f9906l = this.f9903i
-        this.f9907m = i4 - this.f9904j
+        this.f9907m = width - this.f9904j
         mIsLayoutRtl
         m7041j()
         m7034a()
@@ -460,77 +458,155 @@ class BatteryBarChart1 @JvmOverloads constructor(
             contentDescription = format2
         }
     }
+    public final override fun onTouchEvent(event: MotionEvent): Boolean {
+        val x = event.x.toInt()
+        val y = event.y.toInt()
+        val action = event.action
+        val point = this.f9917w
+        var result = false
+        val handled = true
 
-    override fun onTouchEvent(ev: MotionEvent): Boolean {
-        val x10 = ev.x.toInt()
-        val y10 = ev.y.toInt()
-        val action = ev.action
-        val pointF = this.f9917w
-        var z10 = false
-        MotionEvent.ACTION_UP
-        if (action != MotionEvent.ACTION_DOWN) {
-            val f10 = this.f9919y
-            if (action != MotionEvent.ACTION_MOVE) {
-                if (action != MotionEvent.ACTION_CANCEL) {
-                    if (y10 < f10) {
-                        return false
+        when (action) {
+            MotionEvent.ACTION_DOWN -> {
+                System.currentTimeMillis()
+//                this.f9341u = this.f9323c
+                this.f9915u = this.mSelectIndex
+                this.f9916v = 0
+                point.set(event.x, event.y)
+            }
+            MotionEvent.ACTION_MOVE -> {
+                if (!this.m7038e(x)) {
+                    return false
+                }
+                if (this.f9916v == 1 || this.f9916v == 2) {
+                    this.m7042k(x)
+                } else {
+                    val yDiff = abs(event.y - point.y)
+                    val xDiff = abs(event.x - point.x)
+                    if (yDiff > xDiff) {
+                        this.f9916v = 2
+                    } else if (abs(event.x - point.x) > 60f) {
+                        this.f9916v = 1
+                        this.m7042k(x)
                     }
-                    if (m7038e(x10)) {
-                        if (this.f9915u == (m7036c(x10) + this.mIsHalfHour) / 2) {
-                            Logcat.d("BatteryBarChart", "reset bar status.")
-                            m7040i()
-                            z10 = true
+                }
+            }
+            MotionEvent.ACTION_UP -> {
+                if (event.y < this.f9919y) {
+                    return false
+                }
+                if (this.m7038e(x)) {
+                    val index = (this.m7036c(x) + this.mIsHalfHour) / 2
+                    if (this.f9915u == index) {
+                        Logcat.d("BatteryBarChart", "reset bar status.")
+                        this.m7040i()
+                        result = true
+                    }
+                }
+                if (result) {
+                    return handled
+                }
+                if (this.m7038e(x)) {
+                    val index = (this.m7036c(x) + this.mIsHalfHour) / 2
+                    if (index != this.mSelectIndex) {
+                        if (this.m7038e(x)) {
+                            val selectedIndex = (this.m7036c(x) + this.mIsHalfHour) / 2
+                            this.setSelectIndex(selectedIndex)
+                            this.m7035b()
+                            this.invalidate()
                         }
                     }
-                    if (z10) {
-                        return true
-                    }
-                    if (m7038e(x10) && (m7036c(x10) + this.mIsHalfHour) / 2 != this.mSelectIndex && m7038e(
-                            x10
-                        )
-                    ) {
-                        setSelectIndex((m7036c(x10) + this.mIsHalfHour) / 2)
-                        m7035b()
-                        invalidate()
-                    }
-                    if (!m7039f()) {
-                        this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
-                    }
-                    parent.requestDisallowInterceptTouchEvent(true)
-                    this.slideListener?.onSlide(true)
-                    return true
                 }
-                if (!m7039f()) {
-                    this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
+                if (!this.m7039f()) {
+                    val timeSpan = this.selectedTimeSpand
+                    this.mCallBack?.onCalback(this.selectedTime, timeSpan, false)
                 }
-                parent.requestDisallowInterceptTouchEvent(true)
                 this.slideListener?.onSlide(true)
-                return true
             }
-            if (m7038e(x10)) {
-                val f11 = y10.toFloat()
-                if (f11 >= f10) {
-                    val i4 = this.f9916v
-                    if (i4 != 1 && i4 != 2) {
-                        val f12 = x10.toFloat()
-                        if (abs(f11 - pointF.y) > abs(f12 - pointF.x)) {
-                            this.f9916v = 2
-                        } else if (abs(f12 - pointF.x) > 60.0f) {
-                            this.f9916v = 1
-                            m7042k(x10)
-                        }
-                    } else {
-                        m7042k(x10)
-                    }
+            else -> {
+                if (event.y < this.f9919y) {
+                    return false
                 }
+                if (!this.m7039f()) {
+                    val timeSpan = this.selectedTimeSpand
+                    this.mCallBack?.onCalback(this.selectedTime, timeSpan, false)
+                }
+                this.slideListener?.onSlide(true)
             }
-            return false
         }
-        this.f9915u = this.mSelectIndex
-        this.f9916v = 0
-        pointF[ev.x] = ev.y
-        return true
+        return handled
     }
+
+//    override fun onTouchEvent(ev: MotionEvent): Boolean {
+//        val x10 = ev.x.toInt()
+//        val y10 = ev.y.toInt()
+//        val action = ev.action
+//        val pointF = this.f9917w
+//        var z10 = false
+//        MotionEvent.ACTION_UP
+//        if (action != MotionEvent.ACTION_DOWN) {
+//            val f10 = this.f9919y
+//            if (action != MotionEvent.ACTION_MOVE) {
+//                if (action != MotionEvent.ACTION_CANCEL) {
+//                    if (y10 < f10) {
+//                        return false
+//                    }
+//                    if (m7038e(x10)) {
+//                        if (this.f9915u == (m7036c(x10) + this.mIsHalfHour) / 2) {
+//                            Logcat.d("BatteryBarChart", "reset bar status.")
+//                            m7040i()
+//                            z10 = true
+//                        }
+//                    }
+//                    if (z10) {
+//                        return true
+//                    }
+//                    if (m7038e(x10) && (m7036c(x10) + this.mIsHalfHour) / 2 != this.mSelectIndex && m7038e(
+//                            x10
+//                        )
+//                    ) {
+//                        setSelectIndex((m7036c(x10) + this.mIsHalfHour) / 2)
+//                        m7035b()
+//                        invalidate()
+//                    }
+//                    if (!m7039f()) {
+//                        this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
+//                    }
+//                    parent.requestDisallowInterceptTouchEvent(true)
+//                    this.slideListener?.onSlide(true)
+//                    return true
+//                }
+//                if (!m7039f()) {
+//                    this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
+//                }
+//                parent.requestDisallowInterceptTouchEvent(true)
+//                this.slideListener?.onSlide(true)
+//                return true
+//            }
+//            if (m7038e(x10)) {
+//                val f11 = y10.toFloat()
+//                if (f11 >= f10) {
+//                    val i4 = this.f9916v
+//                    if (i4 != 1 && i4 != 2) {
+//                        val f12 = x10.toFloat()
+//                        if (abs(f11 - pointF.y) > abs(f12 - pointF.x)) {
+//                            this.f9916v = 2
+//                        } else if (abs(f12 - pointF.x) > 60.0f) {
+//                            this.f9916v = 1
+//                            m7042k(x10)
+//                        }
+//                    } else {
+//                        m7042k(x10)
+//                    }
+//                }
+//            }
+//            return false
+//        }
+//        this.f9915u = this.mSelectIndex
+//        this.f9916v = 0
+//        pointF[ev.x] = ev.y
+//        return true
+//    }
 
     fun setListData(listData: List<LevelAndCharge>) {
         val j10: Long

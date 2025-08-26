@@ -433,12 +433,12 @@ class BatteryBarChart @JvmOverloads constructor(
             }
             // 第二部分：绘制气泡
             // 修复气泡显示条件：只有当条形图被选中且显示气泡时才绘制
-//            if (barItem.showBubble && !m7039f()) {
-//                dLog { "barItem.showBubble:${barItem.showBubble},percentageText:${barItem.percentageText},text:${selectedTime}" }
-//                drawBubbleView(canvas, barItem, index)
-//            }
+            if (barItem.showBubble && !m7039f()) {
+                dLog { "barItem.showBubble:${barItem.showBubble},percentageText:${barItem.percentageText},text:${selectedTime}" }
+                drawBubbleView(canvas, barItem, index)
+            }
         }
-        DrawBubbleView1.drawBubbleView(this, canvas,i8,i4)
+//        DrawBubbleView.drawBubbleView(this, canvas,i8,i4)
     }
 
     /**

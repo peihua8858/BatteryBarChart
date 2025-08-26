@@ -6,9 +6,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.Shader
 import android.os.Build
-import com.android.settings.R
-import com.android.settings.SettingsApp
-import com.android.settings.base.helper.Logcat
+import com.android.hwsystemmanager.utils.Logcat
 import com.android.settings.util.dp2px
 import java.text.NumberFormat
 
@@ -132,7 +130,7 @@ class BatteryStackBarData1(
     }
 
     fun c() {
-        val context = SettingsApp.getContext()
+        val context = MainApplication.context
         val resources = context.resources
 
         when (f18276h) {
