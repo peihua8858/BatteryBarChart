@@ -42,8 +42,8 @@ class BatteryBarChart @JvmOverloads constructor(
     @JvmField
     var f9894B: Float = 0f
     @JvmField
-    var mCallBack: BatterHistoryUtils.b? = null
-    var slideListener: BatterHistoryUtils.a? = null
+    var mCallBack: BatterHistoryUtils.OnCallBack? = null
+    var slideListener: BatterHistoryUtils.OnSlideListener? = null
     @JvmField
     var mSelectIndex: Int = -1
     @JvmField
@@ -357,7 +357,7 @@ class BatteryBarChart @JvmOverloads constructor(
             }
         }
         val bVar = this.mCallBack
-        bVar?.mo7053a(BatteryStatisticsHelper.m934d(), 3600000L, true)
+        bVar?.onCalback(BatteryStatisticsHelper.m934d(), 3600000L, true)
         invalidate()
     }
 
@@ -386,7 +386,7 @@ class BatteryBarChart @JvmOverloads constructor(
             } else {
                 false
             }
-            aVar.mo7052a(z10)
+            aVar.onSlide(z10)
         }
     }
 
@@ -1050,15 +1050,15 @@ class BatteryBarChart @JvmOverloads constructor(
                         invalidate()
                     }
                     if (!m7039f()) {
-                        this.mCallBack?.mo7053a(selectedTime, selectedTimeSpand, false)
+                        this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
                     }
-                    this.slideListener?.mo7052a(true)
+                    this.slideListener?.onSlide(true)
                     return true
                 }
                 if (!m7039f()) {
-                    this.mCallBack?.mo7053a(selectedTime, selectedTimeSpand, false)
+                    this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
                 }
-                this.slideListener?.mo7052a(true)
+                this.slideListener?.onSlide(true)
                 return true
             }
             if (m7038e(x10)) {

@@ -10,12 +10,12 @@ import com.android.hwsystemmanager.R;
 
 public final class BatterHistoryUtils {
 
-    public interface a {
-        void mo7052a(boolean z10);
+    public interface OnSlideListener {
+        void onSlide(boolean z10);
     }
 
-    public interface b {
-        void mo7053a(long j10, long j11, boolean z10);
+    public interface OnCallBack {
+        void onCalback(long j10, long j11, boolean z10);
     }
 
     public static String m7051a(long j10, long j11, boolean z10) {
