@@ -10,8 +10,8 @@ import com.android.hwsystemmanager.widgets.BatteryBarChart1
 class BarChartTouchHelper1(private val hostView: BatteryBarChart1) : ExploreByTouchHelper(hostView) {
     public override fun getVirtualViewAt(f10: Float, f11: Float): Int {
         for (batteryStackBarData in hostView.mBarLists) {
-            val f12 = batteryStackBarData.f18269a
-            if (f12 <= f10 && f12 + batteryStackBarData.f18271c >= f10) {
+            val f12 = batteryStackBarData.startX
+            if (f12 <= f10 && f12 + batteryStackBarData.width >= f10) {
                 return batteryStackBarData.f18274f
             }
         }
@@ -50,11 +50,11 @@ class BarChartTouchHelper1(private val hostView: BatteryBarChart1) : ExploreByTo
                 val batteryStackBarData = batteryBarChart.mBarLists[i4]
                 batteryBarChart.mSelectIndex = i4 / 2
                 if (batteryBarChart.startIndex < batteryBarChart.mBarLists.size && batteryBarChart.endIndex < batteryBarChart.mBarLists.size) {
-                    val f10 = batteryBarChart.mBarLists[batteryBarChart.startIndex].f18269a
+                    val f10 = batteryBarChart.mBarLists[batteryBarChart.startIndex].startX
                     val f11 =
-                        batteryBarChart.mBarLists[batteryBarChart.endIndex].f18269a + batteryStackBarData.f18271c
-                    val f12 = batteryStackBarData.f18272d
-                    val f13 = batteryStackBarData.f18270b
+                        batteryBarChart.mBarLists[batteryBarChart.endIndex].startX + batteryStackBarData.width
+                    val f12 = batteryStackBarData.height
+                    val f13 = batteryStackBarData.startY
                     node.contentDescription = batteryBarChart.clickPointDescription
                     node.setBoundsInParent(
                         Rect(

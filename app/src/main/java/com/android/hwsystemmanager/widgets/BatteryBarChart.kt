@@ -30,6 +30,7 @@ import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
 import androidx.core.graphics.withScale
+import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.measureTextSize
 
 class BatteryBarChart @JvmOverloads constructor(
@@ -961,9 +962,9 @@ class BatteryBarChart @JvmOverloads constructor(
         super.onSizeChanged(i4, i8, i9, i10)
         val format = NumberFormat.getPercentInstance().format(100 / 100.0)
         val textPaint =
-            createPaint(resources.getDimensionPixelSize(R.dimen.battery_history_chart_dateText_size))
+            createTextPaint(resources.getDimension(R.dimen.battery_history_chart_dateText_size))
         val pair = textPaint.measureTextSize(format)
-        val m11668d = pair.first
+        val m11668d = pair.width()
         val f10 = if (isLandscape) {
             3.0f
         } else {
@@ -1096,7 +1097,7 @@ class BatteryBarChart @JvmOverloads constructor(
         }
         val currentTimeMillis = System.currentTimeMillis()
         j10 = if (this.f9902h <= 0) {
-            BatteryStatisticsHelper.m935e(currentTimeMillis) + (currentTimeMillis - 1800000)
+            BatteryStatisticsHelper.getHalfTime(currentTimeMillis) + (currentTimeMillis - 1800000)
         } else {
             mNumLists.last().time
         }

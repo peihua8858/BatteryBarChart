@@ -13,7 +13,7 @@ import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.r
 import com.android.hwsystemmanager.utils.v
-import com.android.settings.util.dp2px
+import com.android.hwsystemmanager.utils.dp2px
 import kotlin.math.max
 
 class BubbleView1(context: Context, selectedItem: SelectedItem) {

@@ -2,13 +2,13 @@ package com.android.hwsystemmanager.widgets
 
 import android.graphics.Canvas
 import android.graphics.Path
-import android.graphics.RectF
 import com.android.hwsystemmanager.BatteryStackBarData1
+import com.android.hwsystemmanager.widgets.BatteryBarChart1.Companion.isDifferentFromNextCharge
+import com.android.hwsystemmanager.widgets.BatteryBarChart1.Companion.isDifferentFromPreviousCharge
 import com.android.hwsystemmanager.SelectedItem
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.ScreenReaderUtils
 import com.android.hwsystemmanager.utils.dp2px
-import kotlin.math.abs
 import kotlin.math.max
 
 object DrawBubbleView1 {
@@ -29,18 +29,18 @@ object DrawBubbleView1 {
                 break
             }
 
-            val isTrue = next.f18279k == "true"
+            val isTrue = next.charge == "true"
             var cornerType = 4
 
             when {
                 i == 0 -> {
-                    if (barChart.m7039f()) {
+                    if (barChart.notSelected()) {
                         if (barChart.f9902h <= 1) {
-                            cornerType = 1
+                            cornerType = 4
                         } else {
                             val current = mBarLists[i]
                             val nextItem = mBarLists[nextIndex]
-                            cornerType = if (current.f18273e.charge == nextItem.f18273e.charge) {
+                            cornerType = if (current.levelAndCharge.charge == nextItem.levelAndCharge.charge) {
                                 1
                             } else {
                                 4
@@ -52,7 +52,7 @@ object DrawBubbleView1 {
                         } else {
                             val current = mBarLists[i]
                             val nextItem = mBarLists[nextIndex]
-                            cornerType = if (current.f18273e.charge == nextItem.f18273e.charge) {
+                            cornerType = if (current.levelAndCharge.charge == nextItem.levelAndCharge.charge) {
                                 1
                             } else {
                                 4
@@ -62,60 +62,71 @@ object DrawBubbleView1 {
                 }
 
                 i == barChart.f9902h - 1 -> {
-                    if (barChart.m7039f()) {
+                    if (barChart.notSelected()) {
                         val current = mBarLists[i]
                         val prevItem = mBarLists[i - 1]
-                        cornerType = if (current.f18273e.charge == prevItem.f18273e.charge) {
+                        cornerType = if (current.levelAndCharge.charge == prevItem.levelAndCharge.charge) {
                             3
                         } else {
-                            1
+                            4
                         }
                     } else {
-                        val isStartIndex =
-                            barChart.startIndex == i && barChart.selectedTimeSpand == 1800000L
-                        val isEndIndex =
-                            barChart.endIndex == i && barChart.selectedTimeSpand == 3600000L
-                        val isLastItem = barChart.f9902h - barChart.endIndex == 2
+                        //>>Lb8
+                        cornerType = if (barChart.startIndex == i && barChart.selectedTimeSpand == 1800000L) {
+                            4
+                        } else if (barChart.endIndex == i && barChart.selectedTimeSpand == 3600000L
+                            && isDifferentFromPreviousCharge(i, mBarLists)
+                        ) {
+                            4
+                        }else if(barChart.endIndex == i - 1 && barChart.f9902h - barChart.endIndex == 2){
+                            4
+                        }else{
+                            3
+                        }
+                    }
+                }
 
-                        cornerType =
-                            if (isStartIndex || (isEndIndex && !BatteryBarChart1.m7032g(
-                                    i,
-                                    mBarLists
-                                )) || (barChart.endIndex == i - 1 && isLastItem)
+                i < mBarLists.size -> {
+                    //L103>L10d
+                    if (barChart.notSelected()) {
+                        //未选中时
+                        cornerType = if (i != mBarLists.size - 1) {
+                            if (isDifferentFromPreviousCharge(i, mBarLists)
+                                && isDifferentFromNextCharge(i, mBarLists)
                             ) {
                                 4
-                            } else {
+                            } else if (isDifferentFromPreviousCharge(i, mBarLists)) {
                                 1
+                            } else if (isDifferentFromNextCharge(i, mBarLists)) {
+                                3
+                            } else {
+                                2
                             }
-                    }
-                }
-
-                i < mBarLists.size && i >= 1 -> {
-                    if (barChart.m7039f()) {
-                        if (i != mBarLists.size - 1) {
-                            if (BatteryBarChart1.m7032g(i, mBarLists) && BatteryBarChart1.m7033h(i, mBarLists)) {
-                                cornerType = 4
-                            } else if (BatteryBarChart1.m7032g(i, mBarLists)) {
-                                cornerType = 1
-                            } else if (BatteryBarChart1.m7033h(i, mBarLists)) {
-                                cornerType = 3
-                            }
+                        } else {
+                            3
                         }
                     } else {
+                        //L13b
                         val startIndex = barChart.startIndex
                         val endIndex = barChart.endIndex
-
-                        cornerType = when {
-                            i == startIndex && BatteryBarChart1.m7033h(i, mBarLists) -> 4
-                            i == endIndex && BatteryBarChart1.m7032g(i, mBarLists) -> 4
-                            i == endIndex + 1 || i == startIndex -> 1
-                            i == barChart.f9902h - 1 || i == startIndex - 1 -> 1
-                            i == endIndex -> 3
-                            else -> 4
-                        }
+                        cornerType =
+                            if (i == startIndex && isDifferentFromNextCharge(i, mBarLists)) {
+                                4
+                            } else if (endIndex == i && isDifferentFromPreviousCharge(
+                                    i,
+                                    mBarLists
+                                )
+                            ) {
+                                4
+                            } else if (endIndex + 1 == i || startIndex == i) {
+                                1
+                            } else if (barChart.f9902h - 1 == i || startIndex - 1 == i || endIndex == i) {
+                                3
+                            } else {
+                                2
+                            }
                     }
                 }
-
                 else -> cornerType = 1
             }
 
@@ -127,7 +138,7 @@ object DrawBubbleView1 {
                 next.a(
                     canvas,
                     isTrue,
-                    next.f18273e.level,
+                    next.levelAndCharge.level,
                     path,
                     cornerType
                 )
@@ -135,7 +146,7 @@ object DrawBubbleView1 {
 
             if (1 <= i && i < barChart.f9902h) {
                 val prevItem = mBarLists[i - 1]
-                next.a(canvas, isTrue, prevItem.f18273e.level, path, cornerType)
+                next.a(canvas, isTrue, prevItem.levelAndCharge.level, path, cornerType)
             }
 
             i = nextIndex
@@ -153,26 +164,26 @@ object DrawBubbleView1 {
             }
 
             // 修复：添加条件判断，确保只在需要时绘制气泡
-            if (!next.f18277i || barChart.m7039f() || bubbleDrawn) {
+            if (!next.f18277i || barChart.notSelected() || bubbleDrawn) {
                 j = nextJ
                 continue
             }
             val barDataState = next.f18276h
 //            val state = next.f18278j
             val lastIndex = mBarLists.size - 2
-            var levelAndCharge = next.f18273e
+            var levelAndCharge = next.levelAndCharge
 
             if (j < lastIndex) {
                 val nextItem = mBarLists[nextJ]
-                if (levelAndCharge.level < nextItem.f18273e.level) {
-                    levelAndCharge = nextItem.f18273e
+                if (levelAndCharge.level < nextItem.levelAndCharge.level) {
+                    levelAndCharge = nextItem.levelAndCharge
                 }
             }
-            val y2 = next.f18270b
-            val startX = next.f18269a
+            val y2 = next.startY
+            val startX = next.startX
             val startY =
-                (((barChart.f9909o - barChart.f9908n) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
-            Logcat.d("BubbleView", "BubbleView>>startX:$startX,startY:$startY,y2:$y2,barChart.f9909o:${barChart.f9909o},barChart.f9908n:${barChart.f9908n},levelAndCharge.level:${levelAndCharge.level}")
+                (((barChart.chartHeight - barChart.f9908n) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
+            Logcat.d("BubbleView", "BubbleView>>startX:$startX,startY:$startY,y2:$y2,barChart.chartHeight:${barChart.chartHeight},barChart.f9908n:${barChart.f9908n},levelAndCharge.level:${levelAndCharge.level}")
             val height = barChart.height
             var m10476a = 0f
             val bubbleStartX = when (barDataState) {
@@ -347,7 +358,7 @@ object DrawBubbleView1 {
                 }
 
                 // 使用Path绘制气泡和三角形箭头，参考drawBubbleView方法
-                val aa =f27-(f16-f27)
+                val aa = f27 - (f16 - f27)
                 val trianglePath = Path().apply {
                     moveTo(f27, pointY) // 顶点
                     lineTo(f16, f39) // 第一个点
@@ -412,28 +423,28 @@ object DrawBubbleView1 {
             val next2 = it3.next()
             val i16 = i15 + 1
             if (i15 >= 0) {
-                if (next2.f18277i && !barChart.m7039f()) {
+                if (next2.f18277i && !barChart.notSelected()) {
                     val barDataState = next2.f18276h
                     val size = mBarLists.size - i8
-                    var levelAndCharge = next2.f18273e
+                    var levelAndCharge = next2.levelAndCharge
                     if (i15 < size) {
-                        val levelAndCharge2 = mBarLists[i16].f18273e
+                        val levelAndCharge2 = mBarLists[i16].levelAndCharge
                         if (levelAndCharge.level < levelAndCharge2.level) {
                             levelAndCharge = levelAndCharge2
                         }
                     }
-                    val startY = next2.f18270b
+                    val startY = next2.startY
                     Logcat.d("BatteryBarChart", "it.y2 is $startY")
                     Logcat.d("BatteryBarChart", "it.level2 is " + next2.f18275g)
                     val f23 =
-                        (((barChart.f9909o - barChart.f9908n) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + startY
+                        (((barChart.chartHeight - barChart.f9908n) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + startY
                     Logcat.d(
                         "BatteryBarChart",
                         "drawBubbleView chart startY--" + startY + " , height--" + barChart.height + " , level--" + levelAndCharge.level
                     )
                     Logcat.d("BatteryBarChart", "barDataState is $barDataState")
                     Logcat.d("BatteryBarChart", "startY is $startY")
-                    val startX = next2.f18269a
+                    val startX = next2.startX
                     Logcat.d("BatteryBarChart", "startX is $startX")
                     if (barDataState != -1) {
                         if (barDataState != i4) {

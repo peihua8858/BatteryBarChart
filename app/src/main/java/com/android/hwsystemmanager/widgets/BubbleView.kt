@@ -3,7 +3,6 @@ package com.android.hwsystemmanager.widgets
 import android.content.Context
 import android.graphics.Color
 import android.graphics.Paint
-import android.graphics.Rect
 import android.graphics.RectF
 import android.os.Build
 import com.android.hwsystemmanager.utils.AttributeParseUtils
@@ -14,7 +13,7 @@ import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.r
 import com.android.hwsystemmanager.utils.v
-import com.android.settings.util.dp2px
+import com.android.hwsystemmanager.utils.dp2px
 import kotlin.math.max
 
 class BubbleView(context: Context, selectedItem: SelectedItem) {
@@ -104,10 +103,10 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
             paint2.textSize = 76.0f
         }
         val pair = paint2.measureTextSize(m11216d)
-        val width = pair.first.toFloat()
+        val width = pair.width().toFloat()
         Logcat.d("BatteryHistoryChartPaintFactory", "width is $width，m11216d:$m11216d")
         this.f22162j = width
-        val height = pair.second.toFloat()
+        val height = pair.height().toFloat()
         Logcat.d("BatteryHistoryChartPaintFactory", "height is $height")
         this.f22163k = height
         this.mStartX = selectedItem.startX

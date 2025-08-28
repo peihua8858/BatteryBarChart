@@ -19,7 +19,9 @@ import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.BatterHistoryUtils
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.createPaint
+import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dp2px
+import com.android.hwsystemmanager.utils.getDimension
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.measureTextSize
@@ -54,7 +56,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
     @JvmField
     var f9904j: Float = 0f
     @JvmField
-    val f9905k: Float = resources.getDimension(R.dimen.battery_history_chart_bottom_padding)
+    val chartBottomPadding: Float
 
     @JvmField
     var f9906l: Float = 0f
@@ -63,7 +65,8 @@ class BatteryBarChart1 @JvmOverloads constructor(
     @JvmField
     var f9908n: Float = 0f
     @JvmField
-    var f9909o: Float = 0f
+    var chartHeight: Float = 0f
+
     @JvmField
     var f9910p: Int = 0
     @JvmField
@@ -81,18 +84,22 @@ class BatteryBarChart1 @JvmOverloads constructor(
     val f9917w: PointF
     var f9918x: BarChartTouchHelper1? = null
     @JvmField
-    val f9919y: Float = resources.getDimension(R.dimen.margin_bar_top_bubble)
+    val barBubbleTopMargin: Float
 
     @JvmField
-    val f9920z: Float = resources.getDimension(R.dimen.battery_chart_height)
+    val f9920z: Float
 
     init {
         this.mSelectIndex = -1
         this.mNumLists = ArrayList()
         this.mBarLists = ArrayList()
+        this.chartBottomPadding =
+            resources.getDimension(R.dimen.battery_history_chart_bottom_padding)
         this.f9913s = ArrayList()
         this.f9915u = this.mSelectIndex
         this.f9917w = PointF()
+        this.barBubbleTopMargin = resources.getDimension(R.dimen.margin_bar_top_bubble)
+        this.f9920z = resources.getDimension(R.dimen.battery_chart_height)
     }
 
 
@@ -130,7 +137,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
             val f11 = this.f9912r
             val f12 = (i4 * f11) + f10
             val f13 = this.f9908n
-            val f14 = this.f9909o - f13
+            val f14 = this.chartHeight - f13
             val levelAndCharge = mNumLists[i4]
             val batteryStackBarData = BatteryStackBarData1(f12, f13, f11, f14, levelAndCharge)
             val m10301a = mNumLists[i4].charge == "true"
@@ -155,7 +162,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
             i4++
             i9 = 48
         }
-        if (!m7039f()) {
+        if (!notSelected()) {
             m7035b()
         }
         if (!z16) {
@@ -183,19 +190,19 @@ class BatteryBarChart1 @JvmOverloads constructor(
                         val i8 = index - 1
                         Logcat.d(
                             "BatteryBarChart",
-                            mBarLists[i8].f18273e.level.toString() + " " + mBarLists[index].f18273e.level
+                            mBarLists[i8].levelAndCharge.level.toString() + " " + mBarLists[index].levelAndCharge.level
                         )
-                        if (mBarLists[index].f18273e.level != 0 && mBarLists[i8].f18273e.level != 0) {
-                            if (mBarLists[index].f18273e.level >= mBarLists[i8].f18273e.level) {
+                        if (mBarLists[index].levelAndCharge.level != 0 && mBarLists[i8].levelAndCharge.level != 0) {
+                            if (mBarLists[index].levelAndCharge.level >= mBarLists[i8].levelAndCharge.level) {
                                 mBarLists[index].f18278j = 2
                                 mBarLists[i8].f18278j = 0
                             } else {
                                 mBarLists[i8].f18278j = 1
                                 mBarLists[index].f18278j = 0
                             }
-                        } else if (mBarLists[index].f18273e.level == 0) {
+                        } else if (mBarLists[index].levelAndCharge.level == 0) {
                             mBarLists[i8].f18278j = -1
-                        } else if (mBarLists[i8].f18273e.level == 0) {
+                        } else if (mBarLists[i8].levelAndCharge.level == 0) {
                             mBarLists[index].f18278j = -1
                         } else {
                             Logcat.d("BatteryBarChart", "invalid")
@@ -270,7 +277,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
     }
 
 
-    fun m7039f(): Boolean {
+    fun notSelected(): Boolean {
         return this.mSelectIndex == -1
     }
 
@@ -339,7 +346,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
 
     val startIndex: Int
         get() {
-            if (this.mSelectIndex != 0 && !m7039f()) {
+            if (this.mSelectIndex != 0 && !notSelected()) {
                 return (this.mSelectIndex * 2) - this.mIsHalfHour
             }
             return 0
@@ -394,7 +401,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
         super.onMeasure(i4, i8)
         setMeasuredDimension(
             MeasureSpec.getSize(i4),
-            (this.f9919y + this.f9905k + this.f9920z).toInt()
+            (this.barBubbleTopMargin + this.chartBottomPadding + this.f9920z).toInt()
         )
     }
 
@@ -402,16 +409,15 @@ class BatteryBarChart1 @JvmOverloads constructor(
         val m14219b: Float
         super.onSizeChanged(width, height, oldWidth, oldHeight)
         val format = NumberFormat.getPercentInstance().format(100 / 100.0)
-        val textPaint =
-            createPaint(resources.getDimensionPixelSize(R.dimen.battery_history_chart_dateText_size))
-        val pair = textPaint.measureTextSize(format)
-        val m11668d = pair.first
+        val textPaint = createTextPaint(getDimension(R.dimen.battery_history_chart_dateText_size))
+        val textRect = textPaint.measureTextSize(format)
+        val m11668d = textRect.width()
         val f10 = if (isLandscape) {
             3.0f
         } else {
             2.0f
         }
-        var m10476a = dp2px(f10).toFloat()
+        var m10476a = dp2px(f10)
         val z10 = true
         m14219b = if (z10) {
             m10476a
@@ -425,8 +431,8 @@ class BatteryBarChart1 @JvmOverloads constructor(
         this.f9904j = m10476a
         this.f9914t = resources.getDimension(R.dimen.battery_maigin_text_percent) + m11668d
         this.f9910p = width
-        this.f9908n = this.f9919y
-        this.f9909o = height - this.f9905k
+        this.f9908n = this.barBubbleTopMargin
+        this.chartHeight = height - this.chartBottomPadding
         this.f9906l = this.f9903i
         this.f9907m = width - this.f9904j
         mIsLayoutRtl
@@ -474,6 +480,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
                 this.f9916v = 0
                 point.set(event.x, event.y)
             }
+
             MotionEvent.ACTION_MOVE -> {
                 if (!this.m7038e(x)) {
                     return false
@@ -491,8 +498,9 @@ class BatteryBarChart1 @JvmOverloads constructor(
                     }
                 }
             }
+
             MotionEvent.ACTION_UP -> {
-                if (event.y < this.f9919y) {
+                if (event.y < this.barBubbleTopMargin) {
                     return false
                 }
                 if (this.m7038e(x)) {
@@ -517,17 +525,18 @@ class BatteryBarChart1 @JvmOverloads constructor(
                         }
                     }
                 }
-                if (!this.m7039f()) {
+                if (!this.notSelected()) {
                     val timeSpan = this.selectedTimeSpand
                     this.mCallBack?.onCalback(this.selectedTime, timeSpan, false)
                 }
                 this.slideListener?.onSlide(true)
             }
+
             else -> {
-                if (event.y < this.f9919y) {
+                if (event.y < this.barBubbleTopMargin) {
                     return false
                 }
-                if (!this.m7039f()) {
+                if (!this.notSelected()) {
                     val timeSpan = this.selectedTimeSpand
                     this.mCallBack?.onCalback(this.selectedTime, timeSpan, false)
                 }
@@ -569,14 +578,14 @@ class BatteryBarChart1 @JvmOverloads constructor(
 //                        m7035b()
 //                        invalidate()
 //                    }
-//                    if (!m7039f()) {
+//                    if (!notSelected()) {
 //                        this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
 //                    }
 //                    parent.requestDisallowInterceptTouchEvent(true)
 //                    this.slideListener?.onSlide(true)
 //                    return true
 //                }
-//                if (!m7039f()) {
+//                if (!notSelected()) {
 //                    this.mCallBack?.onCalback(selectedTime, selectedTimeSpand, false)
 //                }
 //                parent.requestDisallowInterceptTouchEvent(true)
@@ -618,7 +627,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
         }
         val currentTimeMillis = System.currentTimeMillis()
         j10 = if (this.f9902h <= 0) {
-            BatteryStatisticsHelper.m935e(currentTimeMillis) + (currentTimeMillis - 1800000)
+            BatteryStatisticsHelper.getHalfTime(currentTimeMillis) + (currentTimeMillis - 1800000)
         } else {
             mNumLists.last().time
         }
@@ -659,14 +668,24 @@ class BatteryBarChart1 @JvmOverloads constructor(
     }
 
     companion object {
+        /**
+         * 检查指定索引的电池数据与前一个电池数据的充电值是否不同
+         *
+         * @param index 当前电池数据的索引
+         * @param barData 包含所有电池数据的列表
+         * @return 如果当前电池数据的充电值与前一个电池数据的充电值不同，则返回 true，否则返回 false。
+         */
         @JvmStatic
-        fun m7032g(index: Int, barData: List<BatteryStackBarData1>): Boolean {
-            return barData[index].f18273e.charge != barData[index - 1].f18273e.charge
+        fun isDifferentFromPreviousCharge(index: Int, barData: List<BatteryStackBarData1>): Boolean {
+            return barData[index].levelAndCharge.charge != barData[index - 1].levelAndCharge.charge
         }
 
+        /**
+         * 判断后一个柱状图是否和当前[index]柱状图 charge 值是否相等
+         */
         @JvmStatic
-        fun m7033h(index: Int, barData: List<BatteryStackBarData1>): Boolean {
-            return barData[index].f18273e.charge != barData[index + 1].f18273e.charge
+        fun isDifferentFromNextCharge(index: Int, barData: List<BatteryStackBarData1>): Boolean {
+            return barData[index].levelAndCharge.charge != barData[index + 1].levelAndCharge.charge
         }
     }
 }

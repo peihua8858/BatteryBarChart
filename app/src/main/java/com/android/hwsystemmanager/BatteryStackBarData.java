@@ -1,6 +1,5 @@
 package com.android.hwsystemmanager;
 
-import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.LinearGradient;
@@ -9,8 +8,8 @@ import android.graphics.Path;
 import android.graphics.Shader;
 import android.os.Build;
 
+import com.android.hwsystemmanager.utils.ContextExtKt;
 import com.android.hwsystemmanager.utils.Logcat;
-import com.android.settings.util.ContextExtKt;
 
 import java.text.NumberFormat;
 

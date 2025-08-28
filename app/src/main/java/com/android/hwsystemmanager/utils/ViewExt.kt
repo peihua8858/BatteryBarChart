@@ -7,12 +7,13 @@ import android.content.Context
 import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
+import androidx.annotation.ColorRes
+import androidx.annotation.DimenRes
+import androidx.annotation.Dimension
 import androidx.annotation.Keep
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
-import com.android.settings.util.fontScale
-import com.android.settings.util.isLandscape
 import java.util.Locale
 import kotlin.math.abs
 
@@ -166,8 +167,20 @@ fun View.px2dp(px: Float): Float {
 val isLayoutRtl: Boolean
     get() = TextUtils.getLayoutDirectionFromLocale(Locale.getDefault()) == View.LAYOUT_DIRECTION_RTL
 
-fun View.createPaint(textSize: Int): TextPaint {
-    return context.createPaint(textSize)
+fun View.getDimension(@DimenRes id: Int): Float {
+    return context.getDimension(id)
+}
+
+fun View.getDimensionPixelOffset(@DimenRes id: Int): Int {
+    return resources.getDimensionPixelOffset(id)
+}
+
+fun View.getDimensionPixelSize(@DimenRes id: Int): Int {
+    return resources.getDimensionPixelSize(id)
+}
+
+fun View.getColor(@ColorRes id: Int): Int {
+    return context.getColor(id)
 }
 
 fun Context?.r(): Boolean {
@@ -183,3 +196,26 @@ fun Context?.v(): Boolean {
     }
     return false
 }
+
+var View.isVisible: Boolean
+    get() = visibility == View.VISIBLE
+    set(value) = if (value) {
+        visibility = View.VISIBLE
+    } else {
+        visibility = View.GONE
+    }
+
+var View.isInvisible: Boolean
+    get() = visibility == View.INVISIBLE
+    set(value) = if (value) {
+        visibility = View.INVISIBLE
+    } else {
+        visibility = View.VISIBLE
+    }
+var View.isGone: Boolean
+    get() = visibility == View.GONE
+    set(value) = if (value) {
+        visibility = View.GONE
+    } else {
+        visibility = View.VISIBLE
+    }

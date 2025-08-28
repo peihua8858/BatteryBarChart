@@ -8,7 +8,7 @@
 //import android.graphics.Shader
 //import androidx.core.content.ContextCompat
 //import com.android.hwsystemmanager.utils.Logcat
-//import com.android.settings.util.dp2px
+//import com.android.hwsystemmanager.utils.dp2px
 //import java.text.NumberFormat
 //
 //class BatteryStackBarData(

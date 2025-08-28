@@ -43,13 +43,13 @@ public final class BatteryStatisticsHelper {
         long currentTimeMillis = System.currentTimeMillis();
         Logcat.d("BatteryStatisticsHelper", "currentTimeMillis:" + currentTimeMillis);
         if (m936f(currentTimeMillis) >= 30) {
-            return m935e(currentTimeMillis) + currentTimeMillis;
+            return getHalfTime(currentTimeMillis) + currentTimeMillis;
         }
-        return (currentTimeMillis - 1800000) + m935e(currentTimeMillis);
+        return (currentTimeMillis - 1800000) + getHalfTime(currentTimeMillis);
     }
 
 
-    public static long m935e(long j10) {
+    public static long getHalfTime(long j10) {
         Logcat.d("BatteryStatisticsHelper", "getHalfTime:" + j10);
         int m936f = m936f(j10);
         if (m936f != 0 && m936f != 30) {

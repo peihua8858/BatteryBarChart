@@ -10,7 +10,6 @@ import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.dLog
 import com.google.gson.Gson
 import java.util.Calendar
-import kotlin.math.round
 import kotlin.math.roundToInt
 
 object BatteryStateHelper {
@@ -28,7 +27,7 @@ object BatteryStateHelper {
 
     fun m929b(levelAndCharge: LevelAndCharge) {
         val j10 = levelAndCharge.time
-        val m935e = BatteryStatisticsHelper.m935e(j10) + (j10 - 1800000)
+        val m935e = BatteryStatisticsHelper.getHalfTime(j10) + (j10 - 1800000)
         val sb2 = StringBuilder("batteryLevel = ")
         val i4 = levelAndCharge.level
         sb2.append(i4)
@@ -62,15 +61,15 @@ object BatteryStateHelper {
             dLog { ">>>sTime:${TimeUtil.formatTime(sTime)}," +
                     "nextTime:${TimeUtil.formatTime(nextTime)}" }
             if (i <= 5) {
-                arrayList.add(LevelAndCharge((80 + i / 2f).roundToInt(), "true", sTime))
-                arrayList.add(LevelAndCharge((80 + (i+1) / 2f).roundToInt(), "true", nextTime))
+                arrayList.add(LevelAndCharge((90 + i / 2f).roundToInt(), "true", sTime))
+                arrayList.add(LevelAndCharge((90 + (i+1) / 2f).roundToInt(), "true", nextTime))
             } else if (i <= 10) {
-                arrayList.add(LevelAndCharge((90 - i / 2f - 30).roundToInt(), "false", sTime))
-                arrayList.add(LevelAndCharge((90 - (i+1) / 2f - 30).roundToInt(), "false", nextTime))
-            } else if (i <= 15) {
-                arrayList.add(LevelAndCharge((70 - i / 2f - 30).roundToInt(), "false", sTime))
-                arrayList.add(LevelAndCharge((70 - (i+1) / 2f - 30).roundToInt(), "false", nextTime))
-            } else {
+                arrayList.add(LevelAndCharge((100 - i / 2f - 20).roundToInt(), "false", sTime))
+                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 20).roundToInt(), "false", nextTime))
+            }else if (i <= 15) {
+                arrayList.add(LevelAndCharge((100 - i / 2f - 80).roundToInt(), "low", sTime))
+                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 80).roundToInt(), "low", nextTime))
+            }  else {
                 arrayList.add(LevelAndCharge((20 + i / 2f).roundToInt(), "true", sTime))
                 arrayList.add(LevelAndCharge((20 + (i+1) / 2f).roundToInt(), "true", nextTime))
             }
