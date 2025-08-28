@@ -58,24 +58,61 @@
                 android:gravity="end|center_vertical"
                 android:orientation="horizontal">
 
-                <com.android.hwsystemmanager.widgets.RoundRectImageView
-                    android:id="@+id/charge_imageview"
-                    android:layout_width="@dimen/charge_round_view_text"
-                    android:layout_height="@dimen/charge_round_view_text"
-                    android:layout_gravity="center_vertical"
-                    android:layout_marginEnd="@dimen/charge_margin_width"
-                    android:src="@color/charge_rect_color"
-                    app:round_radius="@dimen/default_corner_radius"
-                    app:shape_mode="normal" />
+<!--                <com.android.hwsystemmanager.widgets.RoundRectImageView-->
+<!--                    android:id="@+id/charge_imageview"-->
+<!--                    android:layout_width="@dimen/charge_round_view_text"-->
+<!--                    android:layout_height="@dimen/charge_round_view_text"-->
+<!--                    android:layout_gravity="center_vertical"-->
+<!--                    android:layout_marginEnd="@dimen/charge_margin_width"-->
+<!--                    android:src="@color/charge_rect_color"-->
+<!--                    app:round_radius="@dimen/default_corner_radius"-->
+<!--                    app:shape_mode="normal" />-->
 
+<!--                <TextView-->
+<!--                    android:id="@+id/power_charge_time"-->
+<!--                    android:layout_width="wrap_content"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:gravity="end"-->
+<!--                    android:text="@string/charge_time"-->
+<!--                    android:textColor="?android:attr/textColorSecondary"-->
+<!--                    android:textSize="14sp" />-->
                 <TextView
-                    android:id="@+id/power_charge_time"
+                    android:id="@+id/tv_battery_charge"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:gravity="end"
+                    android:layout_marginEnd="24dp"
+                    android:drawablePadding="6dp"
                     android:text="@string/charge_time"
-                    android:textColor="?android:attr/textColorSecondary"
-                    android:textSize="14sp" />
+                    android:drawableStart="@drawable/battery_consum_status"
+                    android:drawableTint="#6DD400"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_battery_consumption"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_battery_consumption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="24dp"
+                    android:drawablePadding="6dp"
+                    android:text="@string/consumption_time"
+                    android:drawableStart="@drawable/battery_consum_status"
+                    android:drawableTint="#0091FF"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_battery_loss"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/tv_battery_loss"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:drawablePadding="6dp"
+                    android:text="@string/low_battery_time"
+                    android:drawableStart="@drawable/battery_consum_status"
+                    android:drawableTint="#FF5968"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
             </LinearLayout>
         </LinearLayout>
 
