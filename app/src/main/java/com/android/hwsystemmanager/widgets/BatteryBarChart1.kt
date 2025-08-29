@@ -172,7 +172,6 @@ class BatteryBarChart1 @JvmOverloads constructor(
             }
             if (z15) {
                 Logcat.d("BatteryBarChart", "normal is not draw indexHorizontalSuffcient is $i8")
-                mBarLists[i8].javaClass
             }
         }
     }

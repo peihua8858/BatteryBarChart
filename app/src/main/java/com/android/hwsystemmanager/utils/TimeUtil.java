@@ -16,7 +16,7 @@ public final class TimeUtil {
 
     public static final SimpleDateFormat f7989a = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
     public static final SimpleDateFormat DATE_FORMAT1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ROOT);
-
+    public static final SimpleDateFormat DATE_HOUR_FORMAT = new SimpleDateFormat("HH", Locale.ROOT);
     public static long a(long j10) {
         Calendar instance = Calendar.getInstance();
         instance.setTimeInMillis(j10);
@@ -61,5 +61,9 @@ public final class TimeUtil {
     }
     public static String formatTime(long time){
         return DATE_FORMAT1.format(new Date(time));
+    }
+
+    public static String formatHourTime(long time){
+        return DATE_HOUR_FORMAT.format(new Date(time));
     }
 }

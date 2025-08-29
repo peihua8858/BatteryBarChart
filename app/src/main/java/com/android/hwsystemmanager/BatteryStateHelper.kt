@@ -51,37 +51,189 @@ object BatteryStateHelper {
         //        SharedPreferenceWrapper.m10724c(context, "power_settings", "last_top_app_consume_update_time", j10);
     }
 
+    private data class LevelModel(val level: Int, val charge: String)
+
+    private val LEVELS_HOUR = arrayOf(
+        LevelModel(90, "false"),
+        LevelModel(70, "false"),
+        LevelModel(50, "false"),
+        LevelModel(30, "false"),
+        LevelModel(28, "false"),
+        LevelModel(26, "false"),
+        LevelModel(23, "false"),
+        LevelModel(22, "false"),
+        LevelModel(18, "false"),
+        LevelModel(15, "false"),
+        LevelModel(10, "false"),
+        LevelModel(22, "true"),
+        LevelModel(25, "true"),
+        LevelModel(40, "true"),
+        LevelModel(60, "true"),
+        LevelModel(80, "true"),
+        LevelModel(99, "true"),
+        LevelModel(90, "false"),
+        LevelModel(80, "false"),
+        LevelModel(60, "false"),
+        LevelModel(40, "false"),
+        LevelModel(25, "false"),
+        LevelModel(16, "low"),
+        LevelModel(13, "low"),
+        LevelModel(6, "low"),
+    )
+    private val LEVELS_HALF_HOUR = arrayOf(
+        LevelModel(90, "false"),
+        LevelModel(80, "false"),
+        LevelModel(70, "false"),
+        LevelModel(65, "false"),
+        LevelModel(60, "false"),
+        LevelModel(50, "false"),
+        LevelModel(40, "false"),
+        LevelModel(32, "false"),
+        LevelModel(30, "false"),
+        LevelModel(28, "false"),
+        LevelModel(26, "false"),
+        LevelModel(23, "false"),
+        LevelModel(22, "false"),
+        LevelModel(18, "false"),
+        LevelModel(15, "false"),
+        LevelModel(10, "false"),
+        LevelModel(22, "true"),
+        LevelModel(25, "true"),
+        LevelModel(40, "true"),
+        LevelModel(60, "true"),
+        LevelModel(80, "true"),
+        LevelModel(99, "true"),
+        LevelModel(100, "true"),
+        LevelModel(95, "false"),
+        LevelModel(90, "false"),
+        LevelModel(85, "false"),
+        LevelModel(80, "false"),
+        LevelModel(75, "false"),
+        LevelModel(72, "false"),
+        LevelModel(68, "false"),
+        LevelModel(66, "false"),
+        LevelModel(65, "false"),
+        LevelModel(60, "false"),
+        LevelModel(50, "false"),
+        LevelModel(45, "false"),
+        LevelModel(43, "false"),
+        LevelModel(40, "false"),
+        LevelModel(36, "false"),
+        LevelModel(25, "false"),
+        LevelModel(20, "false"),
+        LevelModel(18, "false"),
+        LevelModel(16, "low"),
+        LevelModel(15, "low"),
+        LevelModel(13, "low"),
+        LevelModel(10, "low"),
+        LevelModel(8, "low"),
+        LevelModel(6, "low"),
+        LevelModel(5, "low"),
+        LevelModel(3, "low"),
+    )
+
+    fun fakeData(): ArrayList<LevelAndCharge> {
+        val time = BatteryStatisticsHelper.m934d()
+        //这里不需要+60000
+        return fakeData(time - 86400000, 86400000L)
+    }
+
+    /**
+     * 模拟数据，从startTime开始，每1800000ms添加一个数据，统计数据为没半个小时统计一次
+     */
     fun fakeData(startTime: Long, j11: Long): ArrayList<LevelAndCharge> {
         val arrayList = ArrayList<LevelAndCharge>()
-        var time =startTime
-        for (i in 0..23) {
-            val sTime = time  + 1800000
-            val nextTime = sTime + 1800000L
-            time=nextTime
-            dLog { ">>>sTime:${TimeUtil.formatTime(sTime)}," +
-                    "nextTime:${TimeUtil.formatTime(nextTime)}" }
-            if (i <= 5) {
-                arrayList.add(LevelAndCharge((90 + i / 2f).roundToInt(), "true", sTime))
-                arrayList.add(LevelAndCharge((90 + (i+1) / 2f).roundToInt(), "true", nextTime))
-            } else if (i <= 10) {
-                arrayList.add(LevelAndCharge((100 - i / 2f - 20).roundToInt(), "false", sTime))
-                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 20).roundToInt(), "false", nextTime))
-            }else if (i <= 15) {
-                arrayList.add(LevelAndCharge((100 - i / 2f - 80).roundToInt(), "low", sTime))
-                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 80).roundToInt(), "low", nextTime))
-            }  else {
-                arrayList.add(LevelAndCharge((20 + i / 2f).roundToInt(), "true", sTime))
-                arrayList.add(LevelAndCharge((20 + (i+1) / 2f).roundToInt(), "true", nextTime))
-            }
+        val currentTime = System.currentTimeMillis()
+        dLog { ">>>>currentTime:${TimeUtil.formatTime(currentTime)}" }
+        for ((index, time) in ((startTime+1800000) until currentTime step 1800000).withIndex()) {
+            val levelModel = LEVELS_HALF_HOUR[index]
+            arrayList.add(LevelAndCharge(levelModel.level, levelModel.charge, time))
+            dLog { ">>>>time:${TimeUtil.formatTime(time)}" }
         }
-        dLog { ">>>>result:"+ Gson().toJson(arrayList) }
+        dLog { ">>>>result:" + arrayList.size }
+        dLog { ">>>>result:" + Gson().toJson(arrayList) }
         return arrayList
     }
+
+//    fun fakeData(startTime: Long, j11: Long): ArrayList<LevelAndCharge> {
+//        val arrayList = ArrayList<LevelAndCharge>()
+//        val currentTime = System.currentTimeMillis()
+//        var index = 0
+//        val endTime = startTime + j11
+//        var curTime = -1
+//        var preLevel = -1
+//        val levels = LEVELS_HALF_HOUR
+//        for (time in (startTime)until currentTime step 1800000) {
+//            dLog { ">>>>time:${TimeUtil.formatTime(time)}" }
+//            val size = arrayList.size
+//            if (size >= 48) {
+//                break
+//            }
+//            val i14 = ((endTime - time) / 1800000).toInt()
+//            if (i14 == curTime) {
+//                continue
+//            }
+//            val levelModel = levels[index]
+//            val i8 = curTime - i14
+//            val i15 = levelModel.level
+//            dLog { ">>>time:${TimeUtil.formatTime(time)},time:$time,curTime:$curTime,i14:$i14,i8:$i8" }
+//            if (curTime != -1 && i8 > 1) {
+//                var i17 = i8 - 1
+//                val d10 = ((i15 - preLevel) / i8).toDouble()
+//                while (i17 > 0) {
+//                    val j16 = time - (i17 * 1800000)
+//                    val level = ((i15.toDouble()) - ((i17.toDouble()) * d10)).toInt()
+////                    val str = if (i17 == 1 && d10 > 0.0) "true" else if(level<20)"low" else  "false"
+//                    dLog { ">>>>time::${TimeUtil.formatTime(j16)},time:$time,curTime:$curTime,level:$level,i17:$i17,d10:$d10,index:$index,i8:$i8,i14:$i14," }
+//                    arrayList.add(LevelAndCharge(level, levelModel.charge, j16))
+//                    i17 += -1
+//                }
+//                arrayList.add(LevelAndCharge(levelModel.level, levelModel.charge, time))
+//            }
+//            preLevel = i15
+//            curTime = i14
+//            ++index
+//        }
+//        dLog { ">>>>result:" + arrayList.size+",index:$index" }
+//        dLog { ">>>>result:" + Gson().toJson(arrayList) }
+//        return arrayList
+//    }
+
+    //    fun fakeData(startTime: Long, j11: Long): ArrayList<LevelAndCharge> {
+//        val arrayList = ArrayList<LevelAndCharge>()
+//        var time =startTime
+//        for (i in 0..23) {
+//            val sTime = time  + 1800000
+//            val nextTime = sTime + 1800000L
+//            time=nextTime
+//            dLog { ">>>sTime:${TimeUtil.formatTime(sTime)}," +
+//                    "nextTime:${TimeUtil.formatTime(nextTime)}" }
+//            if (i <= 5) {
+//                arrayList.add(LevelAndCharge((90 + i / 2f).roundToInt(), "true", sTime))
+//                arrayList.add(LevelAndCharge((90 + (i+1) / 2f).roundToInt(), "true", nextTime))
+//            } else if (i <= 10) {
+//                arrayList.add(LevelAndCharge((100 - i / 2f - 20).roundToInt(), "false", sTime))
+//                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 20).roundToInt(), "false", nextTime))
+//            }else if (i <= 15) {
+//                arrayList.add(LevelAndCharge((100 - i / 2f - 80).roundToInt(), "low", sTime))
+//                arrayList.add(LevelAndCharge((100 - (i+1) / 2f - 80).roundToInt(), "low", nextTime))
+//            }  else {
+//                arrayList.add(LevelAndCharge((20 + i / 2f).roundToInt(), "true", sTime))
+//                arrayList.add(LevelAndCharge((20 + (i+1) / 2f).roundToInt(), "true", nextTime))
+//            }
+//        }
+//        dLog { ">>>>result:"+ Gson().toJson(arrayList) }
+//        return arrayList
+//    }
     fun formatTime(time: Long): String {
         val calendar = Calendar.getInstance()
         calendar.timeInMillis = time
         val formatDateTime =
-            DateUtils.formatDateTime(MainApplication.context, calendar.timeInMillis,  DateUtils.FORMAT_SHOW_TIME)
+            DateUtils.formatDateTime(
+                MainApplication.context,
+                calendar.timeInMillis,
+                DateUtils.FORMAT_SHOW_TIME
+            )
         dLog { ">>>time:$time,startTimeString =$formatDateTime" }
         return formatDateTime
     }

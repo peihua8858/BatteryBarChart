@@ -115,33 +115,33 @@ public final class BatteryStackBarData {
      */
     private void initColorResources() {
         noChargeLineColor50 = getColorResource(
-                R.color.hsm_widget_canvas_no_charge_line_alpha50,
-                R.color.hsm_widget_canvas_no_charge_line_alpha50_card
+                R.color.battery_no_charge_line_alpha50,
+                R.color.battery_no_charge_line_alpha50_card
         );
 
         noChargeLineColor10 = getColorResource(
-                R.color.hsm_widget_canvas_no_charge_line_alpha10,
-                R.color.hsm_widget_canvas_no_charge_line_alpha10_card
+                R.color.battery_no_charge_line_alpha10,
+                R.color.battery_no_charge_line_alpha10_card
         );
 
         chargeLineColor50 = getColorResource(
-                R.color.hsm_widget_canvas_charge_line_alpha50,
-                R.color.hsm_widget_canvas_charge_line_alpha50_card
+                R.color.battery_charge_line_alpha50,
+                R.color.battery_charge_line_alpha50_card
         );
 
         chargeLineColor10 = getColorResource(
-                R.color.hsm_widget_canvas_charge_line_alpha10,
-                R.color.hsm_widget_canvas_charge_line_alpha10_card
+                R.color.battery_charge_line_alpha10,
+                R.color.battery_charge_line_alpha10_card
         );
 
         noChargeLineNewColor = getColorResource(
-                R.color.hsm_widget_canvas_no_charge_line_new,
-                R.color.hsm_widget_canvas_no_charge_line_new_card
+                R.color.battery_no_charge_line_new,
+                R.color.battery_no_charge_line_new_card
         );
 
         chargeLineNewColor = getColorResource(
-                R.color.hsm_widget_canvas_charge_line_new,
-                R.color.hsm_widget_canvas_charge_line_new_card
+                R.color.battery_charge_line_new,
+                R.color.battery_charge_line_new_card
         );
     }
 

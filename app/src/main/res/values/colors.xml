@@ -46,24 +46,24 @@
 
 
     <!--  no charge battery  -->
-    <color name="hsm_widget_canvas_no_charge_line_alpha10">#00007dff</color>
-    <color name="hsm_widget_canvas_no_charge_line_alpha10_card">#000a59f7</color>
-    <color name="hsm_widget_canvas_no_charge_line_alpha50">#4d007dff</color>
-    <color name="hsm_widget_canvas_no_charge_line_alpha50_card">#4d0a59f7</color>
-    <color name="hsm_widget_canvas_no_charge_line_new">#01a1fe</color>
-    <color name="hsm_widget_canvas_no_charge_line_new_card">#0a59f7</color>
+    <color name="battery_no_charge_line_alpha10">#00007dff</color>
+    <color name="battery_no_charge_line_alpha10_card">#000a59f7</color>
+    <color name="battery_no_charge_line_alpha50">#4d007dff</color>
+    <color name="battery_no_charge_line_alpha50_card">#4d0a59f7</color>
+    <color name="battery_no_charge_line_new">#01a1fe</color>
+    <color name="battery_no_charge_line_new_card">#0a59f7</color>
     <!--  charge battery  -->
-    <color name="hsm_widget_canvas_charge_line_alpha10">#0066da67</color>
-    <color name="hsm_widget_canvas_charge_line_alpha10_card">#0064bb5c</color>
-    <color name="hsm_widget_canvas_charge_line_alpha50">#7366da67</color>
-    <color name="hsm_widget_canvas_charge_line_alpha50_card">#6664bb5c</color>
-    <color name="hsm_widget_canvas_charge_line_new">#47cc47</color>
-    <color name="hsm_widget_canvas_charge_line_new_card">#64bb5c</color>
+    <color name="battery_charge_line_alpha10">#0066da67</color>
+    <color name="battery_charge_line_alpha10_card">#0064bb5c</color>
+    <color name="battery_charge_line_alpha50">#7366da67</color>
+    <color name="battery_charge_line_alpha50_card">#6664bb5c</color>
+    <color name="battery_charge_line_new">#47cc47</color>
+    <color name="battery_charge_line_new_card">#64bb5c</color>
     <!--  low battery  -->
-    <color name="hsm_widget_canvas_Low_battery_line_alpha10_card">#00FF5968</color>
-    <color name="hsm_widget_canvas_Low_battery_line_alpha10">#00FF5968</color>
-    <color name="hsm_widget_canvas_Low_battery_line_alpha50">#4dFF5968</color>
-    <color name="hsm_widget_canvas_Low_battery_line_alpha50_card">#4dFF5968</color>
-    <color name="hsm_widget_canvas_Low_battery_line_new">#FF5968</color>
-    <color name="hsm_widget_canvas_Low_battery_line_new_card">#FF5968</color>
+    <color name="battery_low_battery_line_alpha10_card">#00FF5968</color>
+    <color name="battery_low_battery_line_alpha10">#00FF5968</color>
+    <color name="battery_low_battery_line_alpha50">#4dFF5968</color>
+    <color name="battery_low_battery_line_alpha50_card">#4dFF5968</color>
+    <color name="battery_low_battery_line_new">#FF5968</color>
+    <color name="battery_low_battery_line_new_card">#FF5968</color>
 </resources>

@@ -1,336 +1,158 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/battery_history_upper_layout"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingEnd="24dp"
-    android:paddingStart="450dp"
-    android:orientation="vertical"
-    android:visibility="gone">
+    android:layout_height="wrap_content">
 
-    <include
-        layout="@layout/power_battery_history_upper_des_layout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-
-    <LinearLayout
-        android:id="@+id/battery_level_divider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <include layout="@layout/divider_line_new" />
-    </LinearLayout>
-
-    <LinearLayout
-        android:id="@+id/layout_battery_useage"
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/battery_history_upper_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:paddingStart="450dp"
+        android:paddingEnd="24dp"
+        android:paddingBottom="24dp"
+        android:visibility="gone">
+
+        <include
+            layout="@layout/power_battery_history_upper_des_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <LinearLayout
-            android:id="@+id/layout_power_level"
+            android:id="@+id/battery_level_divider"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="bottom"
-            android:minHeight="@dimen/power_detail_subhead_height"
-            android:orientation="horizontal"
-            android:paddingStart="16dp"
-            android:paddingTop="@dimen/list_padding_top_bottom_height"
-            android:paddingEnd="16dp"
-            android:paddingBottom="@dimen/list_padding_top_bottom_height">
+            android:layout_height="wrap_content">
 
-            <TextView
-                android:id="@+id/text_power_level"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/battery_level"
-                android:textColor="?android:attr/textColorSecondary"
-                android:textSize="14sp" />
-
-            <LinearLayout
-                android:id="@+id/layout_power_charge_time"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_alignParentEnd="true"
-                android:layout_weight="1"
-                android:gravity="end|center_vertical"
-                android:orientation="horizontal">
-
-<!--                <com.android.hwsystemmanager.widgets.RoundRectImageView-->
-<!--                    android:id="@+id/charge_imageview"-->
-<!--                    android:layout_width="@dimen/charge_round_view_text"-->
-<!--                    android:layout_height="@dimen/charge_round_view_text"-->
-<!--                    android:layout_gravity="center_vertical"-->
-<!--                    android:layout_marginEnd="@dimen/charge_margin_width"-->
-<!--                    android:src="@color/charge_rect_color"-->
-<!--                    app:round_radius="@dimen/default_corner_radius"-->
-<!--                    app:shape_mode="normal" />-->
-
-<!--                <TextView-->
-<!--                    android:id="@+id/power_charge_time"-->
-<!--                    android:layout_width="wrap_content"-->
-<!--                    android:layout_height="wrap_content"-->
-<!--                    android:gravity="end"-->
-<!--                    android:text="@string/charge_time"-->
-<!--                    android:textColor="?android:attr/textColorSecondary"-->
-<!--                    android:textSize="14sp" />-->
-                <TextView
-                    android:id="@+id/tv_battery_charge"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:drawablePadding="6dp"
-                    android:text="@string/charge_time"
-                    android:drawableStart="@drawable/battery_consum_status"
-                    android:drawableTint="#6DD400"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_battery_consumption"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_battery_consumption"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="24dp"
-                    android:drawablePadding="6dp"
-                    android:text="@string/consumption_time"
-                    android:drawableStart="@drawable/battery_consum_status"
-                    android:drawableTint="#0091FF"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_battery_loss"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tv_battery_loss"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="6dp"
-                    android:text="@string/low_battery_time"
-                    android:drawableStart="@drawable/battery_consum_status"
-                    android:drawableTint="#FF5968"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </LinearLayout>
+            <include layout="@layout/divider_line_new" />
         </LinearLayout>
 
-        <RelativeLayout
+        <LinearLayout
+            android:id="@+id/layout_battery_useage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_bar_enter_text"
             android:orientation="vertical">
 
-            <FrameLayout
-                android:id="@+id/battery_bar_chart_layout"
+            <LinearLayout
+                android:id="@+id/layout_power_level"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:gravity="bottom"
+                android:minHeight="@dimen/power_detail_subhead_height"
+                android:orientation="horizontal"
+                android:paddingStart="16dp"
+                android:paddingTop="@dimen/list_padding_top_bottom_height"
+                android:paddingEnd="16dp"
+                android:paddingBottom="@dimen/list_padding_top_bottom_height">
 
-                <com.android.hwsystemmanager.widgets.BatteryHistoryOnlyChart
-                    android:id="@+id/battery_stack_chart"
-                    android:layout_width="match_parent"
+                <TextView
+                    android:id="@+id/text_power_level"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:gravity="center_vertical"
-                    android:importantForAccessibility="no" />
+                    android:layout_weight="1"
+                    android:text="@string/battery_level"
+                    android:textColor="?android:attr/textColorSecondary"
+                    android:textSize="14sp" />
 
-                <com.android.hwsystemmanager.widgets.BatteryBarChart1
-                    android:id="@+id/battery_stack_bar"
-                    android:layout_width="match_parent"
+                <LinearLayout
+                    android:id="@+id/layout_power_charge_time"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:focusable="true"
-                    android:gravity="center_vertical" />
-            </FrameLayout>
-        </RelativeLayout>
+                    android:layout_alignParentEnd="true"
+                    android:layout_weight="1"
+                    android:gravity="end|center_vertical"
+                    android:orientation="horizontal">
+
+                    <!--                <com.android.hwsystemmanager.widgets.RoundRectImageView-->
+                    <!--                    android:id="@+id/charge_imageview"-->
+                    <!--                    android:layout_width="@dimen/charge_round_view_text"-->
+                    <!--                    android:layout_height="@dimen/charge_round_view_text"-->
+                    <!--                    android:layout_gravity="center_vertical"-->
+                    <!--                    android:layout_marginEnd="@dimen/charge_margin_width"-->
+                    <!--                    android:src="@color/charge_rect_color"-->
+                    <!--                    app:round_radius="@dimen/default_corner_radius"-->
+                    <!--                    app:shape_mode="normal" />-->
+
+                    <!--                <TextView-->
+                    <!--                    android:id="@+id/power_charge_time"-->
+                    <!--                    android:layout_width="wrap_content"-->
+                    <!--                    android:layout_height="wrap_content"-->
+                    <!--                    android:gravity="end"-->
+                    <!--                    android:text="@string/charge_time"-->
+                    <!--                    android:textColor="?android:attr/textColorSecondary"-->
+                    <!--                    android:textSize="14sp" />-->
+                    <TextView
+                        android:id="@+id/tv_battery_charge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="24dp"
+                        android:drawableStart="@drawable/battery_consum_status"
+                        android:drawablePadding="6dp"
+                        android:drawableTint="#6DD400"
+                        android:text="@string/charge_time"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/tv_battery_consumption"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_battery_consumption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="24dp"
+                        android:drawableStart="@drawable/battery_consum_status"
+                        android:drawablePadding="6dp"
+                        android:drawableTint="#0091FF"
+                        android:text="@string/consumption_time"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toStartOf="@+id/tv_battery_loss"
+                        app:layout_constraintTop_toTopOf="parent" />
+
+                    <TextView
+                        android:id="@+id/tv_battery_loss"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:drawableStart="@drawable/battery_consum_status"
+                        android:drawablePadding="6dp"
+                        android:drawableTint="#FF5968"
+                        android:text="@string/low_battery_time"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/margin_bar_enter_text"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/battery_bar_chart_layout"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <com.android.hwsystemmanager.widgets.BatteryHistoryOnlyChart
+                        android:id="@+id/battery_stack_chart"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:importantForAccessibility="no" />
+
+                    <com.android.hwsystemmanager.widgets.BatteryBarChart1
+                        android:id="@+id/battery_stack_bar"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:focusable="true"
+                        android:gravity="center_vertical" />
+                </FrameLayout>
+            </RelativeLayout>
+
+            <com.android.hwsystemmanager.multicolor.MultiColorLineChart
+                android:id="@+id/battery_line_chart"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
     </LinearLayout>
-</LinearLayout><!--    <com.huawei.frameworkwrap.RingRelativeLayout xmlns:android="http://schemas.android.com/apk/res/android" xmlns:app="http://schemas.android.com/apk/res-auto"-->
-    <!--        android:layout_width="match_parent"-->
-    <!--        android:layout_height="match_parent">-->
-    <!--        <LinearLayout-->
-    <!--            android:orientation="vertical"-->
-    <!--            android:id="@+id/history_loading_layout"-->
-    <!--            android:paddingTop="@dimen/padding_m"-->
-    <!--            android:visibility="visible"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content"-->
-    <!--            android:layout_centerInParent="true">-->
-    <!--            <ProgressBar-->
-    <!--                android:layout_gravity="center_horizontal"-->
-    <!--                android:id="@+id/advance_app_loading"-->
-    <!--                android:layout_width="@dimen/progress_width"-->
-    <!--                android:layout_height="@dimen/progress_height"/>-->
-    <!--            <TextView-->
-    <!--                android:textSize="0x20e012c"-->
-    <!--                android:textColor="?android:attr/textColorSecondary"-->
-    <!--                android:layout_gravity="center_horizontal"-->
-    <!--                android:id="@+id/loading_text"-->
-    <!--                android:layout_width="wrap_content"-->
-    <!--                android:layout_height="wrap_content"-->
-    <!--                android:text="@string/progress_loading"/>-->
-    <!--        </LinearLayout>-->
-    <!--        <com.huawei.frameworkwrap.PostRelativeLayout-->
-    <!--            android:orientation="vertical"-->
-    <!--            android:id="@+id/battery_history_layout"-->
-    <!--            android:visibility="gone"-->
-    <!--            android:layout_width="match_parent"-->
-    <!--            android:layout_height="wrap_content">-->
-    <!--            <LinearLayout-->
-    <!--                android:orientation="vertical"-->
-    <!--                android:id="@+id/battery_history_upper_layout"-->
-    <!--                android:layout_width="match_parent"-->
-    <!--                android:layout_height="wrap_content">-->
-    <!--                <include-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="wrap_content"-->
-    <!--                    layout="@layout/power_battery_history_upper_des_layout"/>-->
-    <!--                <LinearLayout-->
-    <!--                    android:id="@+id/battery_level_divider"-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="wrap_content">-->
-    <!--                    <include layout="@layout/divider_line_new"/>-->
-    <!--                </LinearLayout>-->
-    <!--                <LinearLayout-->
-    <!--                    android:orientation="vertical"-->
-    <!--                    android:id="@+id/layout_battery_useage"-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="wrap_content">-->
-    <!--                    <LinearLayout-->
-    <!--                        android:gravity="bottom"-->
-    <!--                        android:orientation="horizontal"-->
-    <!--                        android:id="@+id/layout_power_level"-->
-    <!--                        android:paddingTop="@dimen/list_padding_top_bottom_height"-->
-    <!--                        android:paddingBottom="@dimen/list_padding_top_bottom_height"-->
-    <!--                        android:layout_width="match_parent"-->
-    <!--                        android:layout_height="wrap_content"-->
-    <!--                        android:minHeight="@dimen/power_detail_subhead_height"-->
-    <!--                        android:paddingStart="?unknown_attr_ref: 20100c8"-->
-    <!--                        android:paddingEnd="?unknown_attr_ref: 20100ca">-->
-    <!--                        <TextView-->
-    <!--                            android:textSize="?unknown_attr_ref: 20100e5"-->
-    <!--                            android:textColor="?android:attr/textColorSecondary"-->
-    <!--                            android:id="@+id/text_power_level"-->
-    <!--                            android:layout_width="0dp"-->
-    <!--                            android:layout_height="wrap_content"-->
-    <!--                            android:text="@string/battery_level"-->
-    <!--                            android:layout_weight="1"-->
-    <!--                            android:fontFamily="?unknown_attr_ref: 20100f0"/>-->
-    <!--                        <LinearLayout-->
-    <!--                            android:gravity="end|center_vertical"-->
-    <!--                            android:orientation="horizontal"-->
-    <!--                            android:id="@+id/layout_power_charge_time"-->
-    <!--                            android:layout_width="0dp"-->
-    <!--                            android:layout_height="wrap_content"-->
-    <!--                            android:layout_weight="1"-->
-    <!--                            android:layout_alignParentEnd="true">-->
-    <!--                            <com.huawei.systemmanager.appfeature.spacecleaner.view.RoundRectImageView-->
-    <!--                                android:layout_gravity="center_vertical"-->
-    <!--                                android:id="@+id/charge_imageview"-->
-    <!--                                android:layout_width="@dimen/charge_round_view_text"-->
-    <!--                                android:layout_height="@dimen/charge_round_view_text"-->
-    <!--                                android:src="@color/charge_rect_color"-->
-    <!--                                android:layout_marginEnd="@dimen/charge_margin_width"-->
-    <!--                                app:round_radius="@dimen/default_corner_radius"-->
-    <!--                                app:shape_mode="normal"/>-->
-    <!--                            <TextView-->
-    <!--                                android:textSize="?unknown_attr_ref: 20100e5"-->
-    <!--                                android:textColor="?android:attr/textColorSecondary"-->
-    <!--                                android:gravity="end"-->
-    <!--                                android:id="@+id/power_charge_time"-->
-    <!--                                android:layout_width="wrap_content"-->
-    <!--                                android:layout_height="wrap_content"-->
-    <!--                                android:text="@string/charge_time"-->
-    <!--                                android:fontFamily="?unknown_attr_ref: 20100f0"/>-->
-    <!--                        </LinearLayout>-->
-    <!--                    </LinearLayout>-->
-    <!--                    <RelativeLayout-->
-    <!--                        android:orientation="vertical"-->
-    <!--                        android:layout_width="match_parent"-->
-    <!--                        android:layout_height="wrap_content"-->
-    <!--                        android:layout_marginTop="@dimen/margin_bar_enter_text">-->
-    <!--                        <FrameLayout-->
-    <!--                            android:id="@+id/battery_bar_chart_layout"-->
-    <!--                            android:layout_width="match_parent"-->
-    <!--                            android:layout_height="wrap_content">-->
-    <!--                            <com.huawei.systemmanager.power.batterychart.BatteryHistoryOnlyChart-->
-    <!--                                android:gravity="center_vertical"-->
-    <!--                                android:id="@+id/battery_stack_chart"-->
-    <!--                                android:layout_width="match_parent"-->
-    <!--                                android:layout_height="wrap_content"-->
-    <!--                                android:importantForAccessibility="no"/>-->
-    <!--                            <com.huawei.systemmanager.power.batterychart.BatteryBarChart-->
-    <!--                                android:gravity="center_vertical"-->
-    <!--                                android:id="@+id/battery_stack_bar"-->
-    <!--                                android:focusable="true"-->
-    <!--                                android:layout_width="match_parent"-->
-    <!--                                android:layout_height="wrap_content"/>-->
-    <!--                        </FrameLayout>-->
-    <!--                    </RelativeLayout>-->
-    <!--                </LinearLayout>-->
-    <!--            </LinearLayout>-->
-    <!--            <LinearLayout-->
-    <!--                android:gravity="bottom"-->
-    <!--                android:id="@+id/consume_layout"-->
-    <!--                android:paddingTop="@dimen/battery_usage_margin"-->
-    <!--                android:paddingBottom="@dimen/list_text_padding_bottom"-->
-    <!--                android:layout_width="match_parent"-->
-    <!--                android:layout_height="wrap_content"-->
-    <!--                android:minHeight="@dimen/power_detail_subhead_height"-->
-    <!--                android:layout_below="@+id/battery_history_upper_layout"-->
-    <!--                android:paddingStart="?unknown_attr_ref: 20100c8"-->
-    <!--                android:paddingEnd="?unknown_attr_ref: 20100ca">-->
-    <!--                <TextView-->
-    <!--                    android:textSize="?unknown_attr_ref: 20100e5"-->
-    <!--                    android:textColor="?android:attr/textColorSecondary"-->
-    <!--                    android:ellipsize="end"-->
-    <!--                    android:id="@+id/consume_ranking"-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="wrap_content"-->
-    <!--                    android:text="@string/consume_value_rank"-->
-    <!--                    android:fontFamily="?unknown_attr_ref: 20100f0"-->
-    <!--                    android:autoSizeTextType="uniform"-->
-    <!--                    android:autoSizeMinTextSize="@dimen/consume_content_text_size"/>-->
-    <!--            </LinearLayout>-->
-    <!--            <LinearLayout-->
-    <!--                android:id="@+id/chart_divider"-->
-    <!--                android:layout_width="match_parent"-->
-    <!--                android:layout_height="wrap_content"-->
-    <!--                android:layout_below="@+id/consume_layout">-->
-    <!--                <include layout="@layout/divider_line_new"/>-->
-    <!--            </LinearLayout>-->
-    <!--            <LinearLayout-->
-    <!--                android:orientation="vertical"-->
-    <!--                android:id="@+id/list_wrap"-->
-    <!--                android:layout_width="match_parent"-->
-    <!--                android:layout_height="match_parent"-->
-    <!--                android:layout_below="@+id/consume_layout">-->
-    <!--                <LinearLayout-->
-    <!--                    android:gravity="center"-->
-    <!--                    android:orientation="vertical"-->
-    <!--                    android:id="@+id/battery_history_no_apps"-->
-    <!--                    android:visibility="gone"-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="?unknown_attr_ref: 20100cd"-->
-    <!--                    android:paddingStart="?unknown_attr_ref: 20100c8"-->
-    <!--                    android:paddingEnd="?unknown_attr_ref: 20100ca"/>-->
-    <!--                <LinearLayout-->
-    <!--                    android:orientation="vertical"-->
-    <!--                    android:id="@+id/battery_history_topApp_layout"-->
-    <!--                    android:paddingBottom="?unknown_attr_ref: 20100cd"-->
-    <!--                    android:visibility="gone"-->
-    <!--                    android:layout_width="match_parent"-->
-    <!--                    android:layout_height="match_parent">-->
-    <!--                    <com.huawei.uikit.hwrecyclerview.widget.HwRecyclerView-->
-    <!--                        android:scrollbarStyle="outsideOverlay"-->
-    <!--                        android:id="@+id/recycler_view"-->
-    <!--                        android:clickable="false"-->
-    <!--                        android:layout_width="match_parent"-->
-    <!--                        android:layout_height="0dp"-->
-    <!--                        android:listSelector="@android:color/transparent"-->
-    <!--                        android:drawSelectorOnTop="false"-->
-    <!--                        android:divider="@null"-->
-    <!--                        android:layout_weight="1.46"-->
-    <!--                        android:nestedScrollingEnabled="false"/>-->
-    <!--                </LinearLayout>-->
-    <!--            </LinearLayout>-->
-    <!--        </com.huawei.frameworkwrap.PostRelativeLayout>-->
-    <!--    </com.huawei.frameworkwrap.RingRelativeLayout>-->
+</androidx.core.widget.NestedScrollView>

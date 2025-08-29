@@ -220,11 +220,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
 
 
     fun m7047e(): Boolean {
-        val z10 = if (this.mEndTime - this.mStartTime >= 82800000) {
-            true
-        } else {
-            false
-        }
+        val z10 = this.mEndTime - this.mStartTime >= 82800000
         return z10 && !DateFormat.is24HourFormat(context)
     }
 
