@@ -3,21 +3,28 @@ package com.android.hwsystemmanager.multicolor
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.Shader
 import android.text.TextPaint
 import android.text.format.DateFormat
 import android.text.format.DateUtils
 import android.util.AttributeSet
 import android.view.View
+import androidx.annotation.ColorInt
 import androidx.core.view.ViewCompat
 import com.android.hwsystemmanager.BatteryStackBarData1
+import com.android.hwsystemmanager.BatteryStatisticsHelper
 import com.android.hwsystemmanager.LevelAndCharge
 import com.android.hwsystemmanager.MainApplication
 import com.android.hwsystemmanager.R
+import com.android.hwsystemmanager.multicolor.MultiColorPathRenderer.PointFColor
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.createDashedPaint
+import com.android.hwsystemmanager.utils.dLog
 import com.android.hwsystemmanager.utils.dp2px
 import com.android.hwsystemmanager.utils.getDimension
 import com.android.hwsystemmanager.utils.getDimensionPixelSize
@@ -26,7 +33,9 @@ import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.isPie
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.parseInt
-import com.fz.common.utils.dLog
+import com.android.hwsystemmanager.widgets.BatteryBarChart1.Companion.isDifferentFromNextCharge
+import com.android.hwsystemmanager.widgets.BatteryBarChart1.Companion.isDifferentFromPreviousCharge
+import com.fz.common.file.calculate
 import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
@@ -45,16 +54,20 @@ class MultiColorLineChart @JvmOverloads constructor(
     private var mHeight: Int = 0
     private var mEndTime: Long = 0
     private var mStartTime: Long = 0
+    private var chartX: Float = 0f
+    private var chartStopX: Float = 0f
+    private var chartY: Float = 0f
+    private var chartStopY: Float = 0f
     private val mLineWidth = getDimensionPixelSize(R.dimen.battery_history_chart_linewidth)
     private val mBottomTextPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = Color.DKGRAY
         this.textSize = getDimension(R.dimen.battery_history_chart_dateText_size)
-        this.textAlign = Paint.Align.CENTER
+//        this.textAlign = Paint.Align.CENTER
     }
     private val mPrecentTextPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
         this.color = Color.DKGRAY
         this.textSize = getDimension(R.dimen.battery_history_chart_dateText_size)
-        this.textAlign = Paint.Align.CENTER
+//        this.textAlign = Paint.Align.CENTER
     }
     private val mBottomTextWidth: Int
     private var mVerticalGap: Float = 0f
@@ -71,7 +84,7 @@ class MultiColorLineChart @JvmOverloads constructor(
     // Initialize grid paint
     private val gridPaint: Paint = createDashedPaint(
         getDimension(R.dimen.battery_history_chart_y_line_size_card),
-        R.color.stroke_y_line_color_card
+        R.color.charge_rect_color
     )
 
 
@@ -79,9 +92,11 @@ class MultiColorLineChart @JvmOverloads constructor(
     private val minValue = 0f
     private var pathRenderer: MultiColorPathRenderer = MultiColorPathRenderer()
     private val bottomPadding = getDimensionPixelSize(R.dimen.battery_history_chart_bottom_padding)
-    private val dp48 = dp2px(48)
+    private val dp48 = getDimensionPixelSize(R.dimen.prevent_list_single_line_height)
     private val chartHeight = getDimensionPixelSize(R.dimen.battery_chart_height)
     private val precentTextWidth: Int
+    private val precentTextHeight: Int
+    private val precentTextMargin:Int =dp2px(6)
     private val chartAboveTextSize =
         getDimensionPixelSize(R.dimen.battery_history_chart_aboveTimeText_size)
     private val chartPrecentTextMargin: Float = getDimension(R.dimen.battery_maigin_text_percent)
@@ -90,28 +105,70 @@ class MultiColorLineChart @JvmOverloads constructor(
     var mSelectIndex: Int = -1
 
     init {
+        setBackgroundColor(Color.CYAN)
         mBottomTextPaint.measureTextSize("现在").apply {
             mBottomTextWidth = this.width()
         }
         val precentFormat = NumberFormat.getPercentInstance().format(100 / 100.0)
         mPrecentTextPaint.measureTextSize(precentFormat).apply {
             precentTextWidth = this.width()
+            precentTextHeight = this.height()
         }
 
-        // 定义颜色及其位置（0~1）
-//        int[] colors = {Color.RED, Color.BLUE, Color.GREEN, Color.YELLOW};
-        val colors = intArrayOf(Color.GREEN, Color.GRAY, Color.GRAY, Color.GRAY)
-        // 创建渲染器
-        val points: MutableList<PointF> = ArrayList()
-        points.add(PointF(100f, 200f))
-        points.add(PointF(200f, 300f))
-        points.add(PointF(300f, 100f))
-        points.add(PointF(400f, 400f))
-        points.add(PointF(500f, 200f))
         pathRenderer = MultiColorPathRenderer()
-        pathRenderer.setData(points, colors)
-        pathRenderer.setStrokeWidth(5f) // 设置线宽
+        pathRenderer.setStrokeWidth(8f) // 设置线宽
     }
+
+    val endIndex: Int
+        get() {
+            val startIndex = startIndex
+            if (this.mIsHalfHour != 1 || (startIndex != 0 && startIndex != 47)) {
+                return (startIndex + 2) - 1
+            }
+            return startIndex
+        }
+
+    val selectedTime: Long
+        get() {
+            val m934d: Long
+            val levelAndCharge = batteryDataList.getOrNull(startIndex)
+            m934d = levelAndCharge?.time ?: BatteryStatisticsHelper.m934d()
+            return m934d - 1800000
+        }
+
+    val selectedTimeSpand: Long
+        get() {
+            if (m7037d(startIndex, endIndex) != 0) {
+                return HALF_HOUR
+            }
+            return ONE_HOUR
+        }
+
+    fun m7037d(startIndex: Int, endIndex: Int): Int {
+        if (startIndex < 0) {
+            return 0
+        }
+        var z11 = true
+        if ((batteryDataList.isNotEmpty()) && startIndex > batteryDataList.size - 1) {
+            return 0
+        }
+        val isOneItem = startIndex == batteryDataList.size - 1
+        if (batteryDataList[startIndex].level < 0 || batteryDataList[endIndex].level != 0) {
+            z11 = false
+        }
+        if ((!isOneItem || !z11) && startIndex != endIndex) {
+            return 0
+        }
+        return -1
+    }
+
+    val startIndex: Int
+        get() {
+            if (this.mSelectIndex != 0 && !notSelected()) {
+                return (this.mSelectIndex * 2) - this.mIsHalfHour
+            }
+            return 0
+        }
 
     private fun setSelectIndex(index: Int) {
         this.mSelectIndex = index
@@ -128,7 +185,7 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        var i9 = (this.chartHeight + this.dp48 + this.bottomPadding + dp2px(40))
+        var i9 = (this.chartHeight + this.dp48 * 2 + this.bottomPadding)
         if (is24HourFormat()) {
             i9 += (this.chartAboveTextSize * 1.5).toInt()
         }
@@ -137,43 +194,24 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        mWidth = w
-        mHeight = h - bottomPadding - dp48
-        mVerticalGap = mHeight / 2f
+        mWidth = w - paddingStart - paddingEnd
+        mHeight = h - paddingTop - paddingBottom - bottomPadding - dp48
+        mVerticalGap = mHeight / 5f
+        chartX = (paddingStart + mLeftVerticalLineWidth)
+        chartStopX = (mWidth - precentTextWidth - precentTextMargin-12).toFloat()
+        chartY = barBubbleTopMargin
+        chartStopY = (mHeight).toFloat()
+        m7041j()
         processData()
         //右侧百分比坐标
-        val i14 = this.mHeight - this.mVerticalGap
-        val i15 = if (isLayoutRtl) 0f else w.toFloat()
-        mPercentCoorList.add(
-            PercentCoordinate(
-                mBottomTextPaint,
-                gridPaint, 0f, precentTextWidth,
-                i15,
-                this.mVerticalGap,
-                i14,
-                100
-            )
-        )
-        mPercentCoorList.add(
-            PercentCoordinate(
-                mBottomTextPaint,
-                gridPaint, 0f, precentTextWidth,
-                i15,
-                this.mVerticalGap,
-                i14,
-                50
-            )
-        )
-        mPercentCoorList.add(
-            PercentCoordinate(
-                mBottomTextPaint,
-                gridPaint, 0f, precentTextWidth,
-                i15,
-                this.mVerticalGap,
-                i14,
-                0
-            )
-        )
+        val i14 = this.mHeight - mVerticalGap.toFloat()
+        val i15 = if (isLayoutRtl) mLeftVerticalLineWidth else mWidth - mLeftVerticalLineWidth
+//        this.chartStopX = if (isLayoutRtl) i15 else i15 - (precentTextWidth).toFloat()
+        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 100))
+//        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 75))
+        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 50))
+//        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 25))
+        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 0))
     }
 
     fun m7041j() {
@@ -187,7 +225,7 @@ class MultiColorLineChart @JvmOverloads constructor(
     }
 
     private fun processData() {
-        var z12: Boolean
+        var z12 = false
         if (batteryDataList.size < 48) {
             Logcat.d("BatteryBarChart", "bar size is still not filled")
             return
@@ -196,21 +234,32 @@ class MultiColorLineChart @JvmOverloads constructor(
         var i8 = -1
         var z16 = false
         var z17 = true
+        var z14 = false
         for ((index, item) in batteryDataList.withIndex()) {
             val f10 = this.mLeftVerticalLineWidth//2dp 或3dp
             val f11 = this.mBarWidth
             val f12 = (index * f11) + f10
-            val f13 = this.barBubbleTopMargin
+            val f13 = this.mVerticalGap.toFloat()
             val f14 = this.chartHeight - f13
-            val stackBarData = StackBarPointData(f12, f13, f11, f14, item)
+            Logcat.d("BatteryBarChart", ">>>>[ x:$f12,y:$f13]")
+            val preLevel =
+                if (index == 0) {
+                    batteryDataList[1]
+                } else {
+                    batteryDataList[index - 1]
+                }
+            val stackBarData = StackBarPointData(f12/*x*/, f13/*y*/, f11/*width*/, f14/*height*/, item, preLevel)
             stackBarData.index = index
-            val nextCharge = batteryDataList[index + 1]
-            val isCharge = item.charge == "true"
-            val isNextCharge = index < 47 && nextCharge.charge == "true"
+            val nextCharge = batteryDataList.getOrNull(index + 1)
+            Logcat.d("BatteryBarChart", " area indexHorizontalSufficient = $i8")
+            if (nextCharge != null) {
+                val isCharge = item.charge == "true"
+                val isNextCharge = index < 47 && nextCharge.charge == "true"
+                z14 = index < 47 && nextCharge.level <= 81
+                val z11 = !(!isLandscape && this.mBarWidth < dp2px(11.0f))
+                z12 = (isNextCharge || z11) && isCharge
+            }
             val z13 = item.level <= 81
-            val z14 = index < 47 && nextCharge.level <= 81
-            val z11 = !(!isLandscape && this.mBarWidth < dp2px(11.0f))
-            z12 = (isNextCharge || z11) && isCharge
             if (z12 && z17) {
                 if (i8 == -1) {
                     i8 = index
@@ -224,11 +273,11 @@ class MultiColorLineChart @JvmOverloads constructor(
             }
             stackBarDataList.add(stackBarData)
         }
-
-
+        pathRenderer.setStrokeWidth(5f) // 设置线宽
         var z15 = true
+        processPointF()
         if (!notSelected()) {
-//            m7035b()
+            m7035b()
         }
         if (!z16) {
             val arrayList = this.stackBarDataList
@@ -241,15 +290,201 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
     }
 
+    private fun processPointF() {
+        val mBarLists = stackBarDataList
+        val f9902h = stackBarDataList.size
+        val pointFColors = mutableListOf<PointFColor>()
+        val pointFs = mutableListOf<PointF>()
+        for ((index, item) in stackBarDataList.withIndex()) {
+            val curLevelCharge = item.levelAndCharge
+            val nextIndex = index + 1
+            var cornerType: Int
+            when {
+                index == 0 -> {
+                    val nextItem = stackBarDataList[nextIndex]
+                    if (notSelected()) {
+                        cornerType = if (f9902h <= 1) {
+                            4
+                        } else {
+                            if (curLevelCharge.charge == nextItem.levelAndCharge.charge) {
+                                1
+                            } else {
+                                4
+                            }
+                        }
+                    } else {
+                        cornerType = if (f9902h <= 1 || mIsHalfHour == 1) {
+                            4
+                        } else {
+                            if (curLevelCharge.charge == nextItem.levelAndCharge.charge) {
+                                1
+                            } else {
+                                4
+                            }
+                        }
+                    }
+                }
+
+                index == f9902h - 1 -> {
+                    if (notSelected()) {
+                        val prevItem = stackBarDataList[index - 1]
+                        cornerType = if (curLevelCharge.charge == prevItem.levelAndCharge.charge) {
+                            3
+                        } else {
+                            4
+                        }
+                    } else {
+                        //>>Lb8
+                        cornerType = if (startIndex == index && selectedTimeSpand == 1800000L) {
+                            4
+                        } else if (endIndex == index && selectedTimeSpand == 3600000L
+                            && isDifferentFromPreviousCharge(index, mBarLists)
+                        ) {
+                            4
+                        } else if (endIndex == index - 1 && f9902h - endIndex == 2) {
+                            4
+                        } else {
+                            3
+                        }
+                    }
+                }
+
+                index < mBarLists.size -> {
+                    //L103>L10d
+                    if (notSelected()) {
+                        //未选中时
+                        cornerType = if (index != mBarLists.size - 1) {
+                            if (isDifferentFromPreviousCharge(index, mBarLists)
+                                && isDifferentFromNextCharge(index, mBarLists)
+                            ) {
+                                4
+                            } else if (isDifferentFromPreviousCharge(index, mBarLists)) {
+                                1
+                            } else if (isDifferentFromNextCharge(index, mBarLists)) {
+                                3
+                            } else {
+                                2
+                            }
+                        } else {
+                            3
+                        }
+                    } else {
+                        //L13b
+                        val startIndex = startIndex
+                        val endIndex = endIndex
+                        cornerType =
+                            if (index == startIndex && isDifferentFromNextCharge(index, mBarLists)) {
+                                4
+                            } else if (endIndex == index && isDifferentFromPreviousCharge(
+                                    index,
+                                    mBarLists
+                                )
+                            ) {
+                                4
+                            } else if (endIndex + 1 == index || startIndex == index) {
+                                1
+                            } else if (f9902h - 1 == index || startIndex - 1 == index || endIndex == index) {
+                                3
+                            } else {
+                                2
+                            }
+                    }
+                }
+
+                else -> cornerType = 1
+            }
+
+            if (cornerType == 1 || cornerType == 4) {
+                pointFs.clear()
+            }
+
+            if (index == 0 && f9902h > 0) {
+                item.calculatePoint(
+                    pointFs,
+                    curLevelCharge.level,
+                    cornerType, index
+                )
+            }
+
+            if (index in 1..<f9902h) {
+                val prevItem = mBarLists[index - 1]
+                item.calculatePoint(pointFs, prevItem.levelAndCharge.level, cornerType, index)
+            }
+
+            when (cornerType) {
+                1, 3, 4 -> {
+                    pointFs.forEach {
+                        pointFColors.add(PointFColor(it.x, it.y, item.drawLineColor))
+                    }
+                }
+            }
+
+
+        }
+        dLog { "pointFColors:${pointFColors.size}" }
+        pathRenderer.setData(pointFColors)
+    }
+
+    fun m7035b() {
+        for ((index, item) in stackBarDataList.withIndex()) {
+//            if (this.mSelectIndex == (this.mIsHalfHour + index) / 2) {
+//                item.f18276h = 1
+//                if (index == endIndex) {
+//                    Logcat.d("BatteryBarChart", "j = $index ")
+//                    if (this.mIsHalfHour == 1 && (index == 0 || index == 47)) {
+//                        item.f18278j = -1
+//                    } else {
+//                        val nextIndex = index - 1
+//                        val nextBar = stackBarDataList[nextIndex]
+//                        Logcat.d(
+//                            "BatteryBarChart",
+//                            item.levelAndCharge.level.toString() + " " + item.levelAndCharge.level
+//                        )
+//                        if (item.levelAndCharge.level != 0 && nextBar.levelAndCharge.level != 0) {
+//                            if (item.levelAndCharge.level >= nextBar.levelAndCharge.level) {
+//                                item.f18278j = 2
+//                                nextBar.f18278j = 0
+//                            } else {
+//                                nextBar.f18278j = 1
+//                                item.f18278j = 0
+//                            }
+//                        } else if (item.levelAndCharge.level == 0) {
+//                            nextBar.f18278j = -1
+//                        } else if (nextBar.levelAndCharge.level == 0) {
+//                            item.f18278j = -1
+//                        } else {
+//                            Logcat.d("BatteryBarChart", "invalid")
+//                        }
+//                    }
+//                }
+//                item.showBubble = true
+//            } else {
+//                item.f18276h = 0
+//                item.showBubble = false
+//            }
+        }
+    }
+
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
 //        drawGrid(canvas)
 //        drawAxes(canvas)
+        canvas.drawLine(
+            chartX, chartY, chartX,
+            chartStopY, gridPaint
+        )
+        canvas.drawLine(
+            chartStopX, chartY, chartStopX,
+            chartStopY, gridPaint
+        )
         drawHorLineAndPrecent(canvas)
         //绘制曲线
         pathRenderer.draw(canvas)
-        val x = dp2px(4f)
-        drawBottomLabels(canvas, x, mWidth)
+        stackBarDataList.forEach {
+            it.drawBar(canvas)
+        }
+//        val x = dp2px(4f)
+        drawBottomLabels(canvas, chartX, mWidth)
     }
 
 
@@ -261,16 +496,20 @@ class MultiColorLineChart @JvmOverloads constructor(
     }
 
     private fun drawBottomLabels(canvas: Canvas, x: Float, chartWidth: Int) {
-        val paddingLeft = paddingLeft
-        val paddingBottom = paddingBottom
         // Draw chart title
         val textPaint = this.mBottomTextPaint
         val hours = createHours()
-        val gad = (chartWidth / 8f).toInt()
+        val gad = ((chartStopX - chartX) / 8f).toInt()
+        val startX = x
         for ((index, item) in hours.withIndex()) {
+            dLog { "x:$x,index:$index,gad:$gad,chartStopX:$chartStopX" }
+            var textWidth = 0
+            mBottomTextPaint.measureTextSize(item).apply {
+                textWidth = this.width()
+            }
             canvas.drawText(
                 item,
-                x + index * gad,
+                startX + index * gad + textWidth / 2f,
                 (this.mHeight + dp48).toFloat(),
                 textPaint
             )
@@ -359,7 +598,7 @@ class MultiColorLineChart @JvmOverloads constructor(
             val context = context
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = firstTime
-            val formatDateTime = DateUtils.formatDateTime(context, calendar.timeInMillis, 1)
+            val formatDateTime = DateUtils.formatDateTime(context, calendar.timeInMillis, DateUtils.FORMAT_SHOW_TIME)
             val startIndex = formatDateTime.indexOf(':') + 1
             val substring = formatDateTime.substring(startIndex, startIndex + 2)
             val res = substring.toInt()
@@ -434,14 +673,31 @@ class MultiColorLineChart @JvmOverloads constructor(
             val substring = formatDateTime.substring(startIndex, startIndex + 2)
             return substring.parseInt(0)
         }
+
+        /**
+         * 检查指定索引的电池数据与前一个电池数据的充电值是否不同
+         *
+         * @param index 当前电池数据的索引
+         * @param barData 包含所有电池数据的列表
+         * @return 如果当前电池数据的充电值与前一个电池数据的充电值不同，则返回 true，否则返回 false。
+         */
+        @JvmStatic
+        fun isDifferentFromPreviousCharge(index: Int, barData: List<StackBarPointData>): Boolean {
+            return barData[index].levelAndCharge.charge != barData[index - 1].levelAndCharge.charge
+        }
+
+        /**
+         * 判断后一个柱状图是否和当前[index]柱状图 charge 值是否相等
+         */
+        @JvmStatic
+        fun isDifferentFromNextCharge(index: Int, barData: List<StackBarPointData>): Boolean {
+            return barData[index].levelAndCharge.charge != barData[index + 1].levelAndCharge.charge
+        }
     }
 
     //右侧百分比坐标数据
     class PercentCoordinate(
-        private val paint: TextPaint,
-        private val linePaint: Paint,
-        private val chartX: Float,
-        private val maxWidth: Int,
+        private val hostView: MultiColorLineChart,
         i4: Float,
         i8: Float,
         i9: Float,
@@ -450,25 +706,23 @@ class MultiColorLineChart @JvmOverloads constructor(
         private val x: Float
         private val y: Float
         private val percent: String
-        private val textHeight: Int
+        private val textPaint = hostView.mPrecentTextPaint
+        private val textWidth = hostView.precentTextWidth
+        private val textHeight = hostView.precentTextHeight
 
         init {
             val format = NumberFormat.getPercentInstance().format(value / 100.0)
             this.percent = format
-            val rect = paint.measureTextSize(format)
-            val height = rect.height()
-            this.textHeight = height
-
-            this.x = if (isLayoutRtl) i4 else i4 - rect.width().toFloat()
-            this.y = (height / 2) + ((i8 + i9) - ((value * i9) / 100))
+            this.x = if (isLayoutRtl) i4 else i4 - textWidth.toFloat()
+            this.y = (textHeight / 2f) + ((i8 + i9) - ((value * i9) / 100))
         }
 
         fun draw(canvas: Canvas, prevY: Float, linewidth: Int): Float {
             if (abs(y - prevY) >= textHeight + linewidth) {
-                canvas.drawText(percent, x, y, paint)
+                canvas.drawText(percent, x, y, textPaint)
                 val lineY = y - (textHeight / 2f)
-                val lineStopX = x - maxWidth
-                canvas.drawLine(chartX, lineY, lineStopX, lineY, linePaint)
+                val lineStopX = hostView.mWidth - hostView.mLeftVerticalLineWidth - textWidth- hostView.precentTextMargin
+                canvas.drawLine(hostView.chartX, lineY, lineStopX, lineY, hostView.gridPaint)
             }
             return y
         }
@@ -481,9 +735,19 @@ data class StackBarPointData(
     val width: Float,
     val height: Float,
     val levelAndCharge: LevelAndCharge,
+    val preCharge: LevelAndCharge
 ) {
+    var showBubble: Boolean = false
     var index = -1
     var charge: String = ""
+    var state: Int = 1
+    var barWidth: Float = 0f
+    var barOffset: Float = 0f
+    val precentLevel: String
+    private var mBarPath: Path = Path()
+    private var mDrawLineColor: Int = 0
+    private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val noChargeLineColor50: Int
     private val noChargeLineColor10: Int
     private val chargeLineColor50: Int
@@ -498,6 +762,11 @@ data class StackBarPointData(
     private val noSelectedBottomBgColor: Int
 
     init {
+        val level = levelAndCharge.level / 100.0
+        precentLevel = NumberFormat.getPercentInstance().format(level)
+        charge = levelAndCharge.charge
+        barWidth = (2f * width) / 3f
+        barOffset = width / 3f
         val context = MainApplication.context
         noChargeLineColor50 = context.getColor(
             if (isPie) R.color.battery_no_charge_line_alpha50_card
@@ -537,9 +806,139 @@ data class StackBarPointData(
         )
         noSelectedBgColor = context.getColor(R.color.battery_not_select_bg)
         noSelectedBottomBgColor = context.getColor(R.color.battery_not_select_bg_bottom_card)
+        changePainColor()
     }
 
-    fun drawBar(canvas: Canvas) {
-        // Draw bar
+    fun calculatePoint(pointFs: MutableList<PointF>, preLevel: Int, type: Int, index: Int) {
+        val levelData = levelAndCharge
+        val level = levelData.level
+        Logcat.d(
+            "BatteryStackBarData",
+            "x:$x,y:$y,width:$width,height:$height,preLevel:$preLevel,level is $level"
+        )
+        val emptySpacePercent = 100 - level
+        val emptySpaceHeight = emptySpacePercent * height / 100f
+        val yStart = y + emptySpaceHeight
+
+        val param3Percent = 100 - preLevel
+        val param3Height = param3Percent * height / 100f
+        val yParam3 = y + param3Height
+
+        val halfWidth = barOffset / 2f
+        val xLeft = x - halfWidth
+        val xRight = x + width - halfWidth
+        when (type) {
+            1 -> {
+                pointFs.add(PointF(xLeft, yParam3))
+                pointFs.add(PointF(xRight, yStart))
+            }
+
+            2 -> {
+                pointFs.add(PointF(xRight, yStart))
+                pointFs.add(PointF(xLeft, yParam3))
+                pointFs.add(PointF(xRight, yStart))
+            }
+
+            3 -> {
+                pointFs.add(PointF(xRight, yStart))
+            }
+
+            4 -> {
+                pointFs.add(PointF(xLeft, yParam3))
+                pointFs.add(PointF(xRight, yStart))
+            }
+
+            else -> {
+                // Do nothing
+            }
+        }
+
+        mBarPath = Path().apply {
+            moveTo(xLeft, yParam3)
+            lineTo(xRight, yStart)
+            lineTo(xRight, y + height)
+            lineTo(xLeft, y + height)
+            close()
+        }
     }
+
+    val drawLineColor: Int
+        get() = linePaint.color
+
+    fun drawBar(canvas: Canvas) {
+        canvas.drawPath(mBarPath, barPaint)
+    }
+
+    fun changePainColor() {
+        val context = MainApplication.context
+
+        when (state) {
+            0, 2 -> {
+                barPaint.shader = createLinearGradient(noSelectedBgColor, noSelectedBgColor)
+                linePaint.color = noSelectedBottomBgColor
+                mDrawLineColor = noSelectedBottomBgColor
+            }
+
+            1 -> {
+                if (charge == "true") {
+                    barPaint.shader = createLinearGradient(chargeLineColor50, chargeLineColor10)
+                    linePaint.color = chargeLineNewColor
+                    mDrawLineColor = chargeLineNewColor
+                } else if (charge == "low") {
+                    barPaint.shader =
+                        createLinearGradient(lowBatteryLineColor50, lowBatteryLineColor10)
+                    linePaint.color = lowBatteryLineNewColor
+                    mDrawLineColor = lowBatteryLineNewColor
+                } else {
+                    barPaint.shader =
+                        createLinearGradient(noChargeLineColor50, noChargeLineColor10)
+                    linePaint.color = noChargeLineNewColor
+                    mDrawLineColor = noChargeLineNewColor
+                }
+
+            }
+        }
+
+//        curvePaint.setColor(getColorResource(
+//            R.color.battery_not_select_bg_bottom,
+//            R.color.battery_not_select_bg_bottom_card
+//        ));
+
+//        val bgColor = resources.getColor(R.color.battery_chart_set)
+//        f18283o.shader = b(bgColor, bgColor)
+
+        // Common paint settings
+//        f18283o.isAntiAlias = true
+        barPaint.isAntiAlias = true
+        barPaint.isAntiAlias = true
+        barPaint.isDither = true
+
+        linePaint.style = Paint.Style.STROKE
+        linePaint.strokeJoin = Paint.Join.ROUND
+        linePaint.strokeWidth = context.dp2px(2f)
+    }
+
+    private fun createLinearGradient(
+        @ColorInt colorStart: Int,
+        @ColorInt colorEnd: Int,
+    ): LinearGradient {
+        // 重新设计渐变策略以增强低电量情况下的可见性
+        val level = levelAndCharge.level
+        val levelY = (if (level < 20) 0f else 0f) + (100 - level) * height / 100f
+        Logcat.d(
+            "BatteryStackBarData>>>",
+            "level:$level,levelY is $levelY,startY:$y, height is $height"
+        )
+        // 调整渐变起始位置，使其与电量曲线位置对齐
+        return LinearGradient(
+            x,
+            levelY, // 使用电量对应的Y坐标作为起始位置
+            x + barWidth,
+            y + height,
+            colorStart,
+            colorEnd,
+            Shader.TileMode.CLAMP
+        )
+    }
+
 }

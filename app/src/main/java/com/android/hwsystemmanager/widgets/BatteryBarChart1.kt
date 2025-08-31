@@ -36,53 +36,72 @@ class BatteryBarChart1 @JvmOverloads constructor(
 ) : View(context, attributeSet, defStyleAttr) {
     @JvmField
     var f9893A: Float = 0f
+
     @JvmField
     var f9894B: Float = 0f
     var mCallBack: BatterHistoryUtils.OnCallBack? = null
     var slideListener: BatterHistoryUtils.OnSlideListener? = null
+
     @JvmField
     var mSelectIndex: Int
     var mNumLists: ArrayList<LevelAndCharge>
+
     @JvmField
     var mBarLists: ArrayList<BatteryStackBarData1>
+
     @JvmField
     var mIsHalfHour: Int = 0
+
     @JvmField
     var lastIndex: Int = 0
+
     @JvmField
     var f9902h: Int = 0
+
     @JvmField
     var f9903i: Float = 0f
+
     @JvmField
     var f9904j: Float = 0f
+
     @JvmField
     val chartBottomPadding: Float
 
     @JvmField
     var f9906l: Float = 0f
+
     @JvmField
     var f9907m: Float = 0f
+
     @JvmField
     var f9908n: Float = 0f
+
     @JvmField
     var chartHeight: Float = 0f
 
     @JvmField
     var f9910p: Int = 0
+
     @JvmField
     var f9911q: Float = 0.0f
+
     @JvmField
     var f9912r: Float = 0f
     val f9913s: ArrayList<Int>
+
     @JvmField
     var f9914t: Float = 0f
+
     @JvmField
     var f9915u: Int
+
     @JvmField
     var f9916v: Int = 0
+
     @JvmField
     val f9917w: PointF
     var f9918x: BarChartTouchHelper1? = null
+
     @JvmField
     val barBubbleTopMargin: Float
 
@@ -139,6 +158,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
             val f13 = this.f9908n
             val f14 = this.chartHeight - f13
             val levelAndCharge = mNumLists[i4]
+            Logcat.d("BatteryBarChart", ">>>>[ x:$f12,y:$f13]")
             val batteryStackBarData = BatteryStackBarData1(f12, f13, f11, f14, levelAndCharge)
             val m10301a = mNumLists[i4].charge == "true"
             z10 = i4 < 47 && mNumLists[i4 + 1].charge == "true"
@@ -393,7 +413,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
 
     public override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        DrawBubbleView1.onDraw(this,canvas)
+        DrawBubbleView1.onDraw(this, canvas)
     }
 
     public override fun onMeasure(i4: Int, i8: Int) {
@@ -463,6 +483,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
             contentDescription = format2
         }
     }
+
     public final override fun onTouchEvent(event: MotionEvent): Boolean {
         val x = event.x.toInt()
         val y = event.y.toInt()

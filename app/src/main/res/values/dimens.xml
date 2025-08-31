@@ -13,7 +13,7 @@
     <dimen name="battery_history_chart_linewidth">2dp</dimen>
     <dimen name="battery_history_chart_right_margin">24dp</dimen>
     <dimen name="battery_history_chart_x_line_size_card">0.25dp</dimen>
-    <dimen name="battery_history_chart_y_line_size_card">0.5dp</dimen>
+    <dimen name="battery_history_chart_y_line_size_card">1dp</dimen>
     <dimen name="battery_history_no_apps_text_margin_top">8dp</dimen>
     <dimen name="battery_history_power_info_des_margin_start">2dp</dimen>
     <dimen name="battery_maigin_text_percent">6dp</dimen>
