@@ -1,5 +1,6 @@
 package com.android.hwsystemmanager.multicolor
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
@@ -13,6 +14,8 @@ import android.text.TextPaint
 import android.text.format.DateFormat
 import android.text.format.DateUtils
 import android.util.AttributeSet
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.ColorInt
 import androidx.core.view.ViewCompat
@@ -20,8 +23,10 @@ import com.android.hwsystemmanager.BatteryStatisticsHelper
 import com.android.hwsystemmanager.LevelAndCharge
 import com.android.hwsystemmanager.MainApplication
 import com.android.hwsystemmanager.R
+import com.android.hwsystemmanager.SelectedItem
 import com.android.hwsystemmanager.multicolor.MultiColorPathRenderer.PointFColor
 import com.android.hwsystemmanager.utils.Logcat
+import com.android.hwsystemmanager.utils.ScreenReaderUtils
 import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.createDashedPaint
 import com.android.hwsystemmanager.utils.dLog
@@ -33,16 +38,21 @@ import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.isPie
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.parseInt
+import com.android.hwsystemmanager.widgets.BubbleView1
 import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class MultiColorLineChart @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
-    private val batteryDataList = mutableListOf<LevelAndCharge>()
+    var f9893A: Float = 0f
+    var f9894B: Float = 0f
+    val batteryDataList = mutableListOf<LevelAndCharge>()
     val stackBarDataList = mutableListOf<StackBarPointData>()
     private val mPercentCoorList = mutableListOf<PercentCoordinate>()
     private val barChartTouchHelper by lazy { BarChartTouchHelper(this) }
@@ -52,6 +62,10 @@ class MultiColorLineChart @JvmOverloads constructor(
     private var mHeight: Int = 0
     private var mEndTime: Long = 0
     private var mStartTime: Long = 0
+    var dataLength: Int = 0
+    var mSelectPointF: PointF = PointF()
+        private set
+    private val onTouchListener = TouchListenerImpl(this)
 
     /**
      * 柱状图X轴坐标
@@ -77,7 +91,7 @@ class MultiColorLineChart @JvmOverloads constructor(
     }
     private val mBottomTextWidth: Int
     private var mVerticalGap: Float = 0f
-    private val mLeftVerticalLineWidth = dp2px(if (isLandscape) 3f else 2f)
+    val mLeftVerticalLineWidth = dp2px(if (isLandscape) 3f else 2f)
 
 
     // Initialize grid paint
@@ -95,11 +109,13 @@ class MultiColorLineChart @JvmOverloads constructor(
     private val precentTextMargin: Int = getDimensionPixelSize(R.dimen.battery_maigin_text_percent)
     private val chartAboveTextSize =
         getDimensionPixelSize(R.dimen.battery_history_chart_aboveTimeText_size)
-    private val barBubbleTopMargin = getDimension(R.dimen.margin_bar_top_bubble)
-    private var mBarWidth: Float = 0f
+    val barBubbleTopMargin = getDimension(R.dimen.margin_bar_top_bubble)
+    var mBarWidth: Float = 0f
+        private set
     var mSelectIndex: Int = -1
 
     init {
+        setOnTouchListener(onTouchListener)
         mBottomTextPaint.measureTextSize("12点").apply {
             mBottomTextWidth = this.width()
         }
@@ -110,14 +126,14 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
 
         pathRenderer = MultiColorPathRenderer()
-        pathRenderer.setStrokeWidth(dp2px(1f)) // 设置线宽
+        pathRenderer.setStrokeWidth(dp2px(5f)) // 设置线宽
     }
 
     val endIndex: Int
         get() {
             val startIndex = startIndex
             if (this.mIsHalfHour != 1 || (startIndex != 0 && startIndex != 47)) {
-                return (startIndex + 2) - 1
+                return min(dataLength - 1, (startIndex + 2) - 1)
             }
             return startIndex
         }
@@ -143,10 +159,10 @@ class MultiColorLineChart @JvmOverloads constructor(
             return 0
         }
         var z11 = true
-        if ((batteryDataList.isNotEmpty()) && startIndex > batteryDataList.size - 1) {
+        if ((batteryDataList.isNotEmpty()) && startIndex > dataLength - 1) {
             return 0
         }
-        val isOneItem = startIndex == batteryDataList.size - 1
+        val isOneItem = startIndex == dataLength - 1
         if (batteryDataList[startIndex].level < 0 || batteryDataList[endIndex].level != 0) {
             z11 = false
         }
@@ -159,12 +175,12 @@ class MultiColorLineChart @JvmOverloads constructor(
     val startIndex: Int
         get() {
             if (this.mSelectIndex != 0 && !notSelected()) {
-                return (this.mSelectIndex * 2) - this.mIsHalfHour
+                return min(dataLength - 1, (this.mSelectIndex * 2) - this.mIsHalfHour)
             }
             return 0
         }
 
-    private fun setSelectIndex(index: Int) {
+    fun setSelectIndex(index: Int) {
         this.mSelectIndex = index
     }
 
@@ -175,6 +191,20 @@ class MultiColorLineChart @JvmOverloads constructor(
     private fun is24HourFormat(): Boolean {
         val z10 = this.mEndTime - this.mStartTime >= 82800000
         return z10 && !DateFormat.is24HourFormat(context)
+    }
+
+    public override fun dispatchHoverEvent(event: MotionEvent): Boolean {
+        val z10: Boolean
+        val barChartTouchHelper = this.barChartTouchHelper
+        z10 = barChartTouchHelper.dispatchHoverEvent(event)
+        return !(!z10 && !super.dispatchHoverEvent(event))
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val z10: Boolean
+        val barChartTouchHelper = this.barChartTouchHelper
+        z10 = barChartTouchHelper.dispatchKeyEvent(event)
+        return !(!z10 && !super.dispatchKeyEvent(event))
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -199,7 +229,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         chartStopY = (mHeight).toFloat()
         m7041j()
         processData()
-        val size = batteryDataList.size
+        val size = dataLength
         if (size != 0 && stackBarDataList.size != 0) {
             for (i11 in 0..<size) {
                 if (batteryDataList[i11].level != 0 && i11 != 0) {
@@ -239,8 +269,8 @@ class MultiColorLineChart @JvmOverloads constructor(
         val f10 = ((this.chartStopX - chartX)) / 48f
         this.mBarWidth = f10
 //        this.f9911q = this.f9903i
-//        this.f9893A = 0.6666667f * f10
-//        this.f9894B = f10 * 0.33333334f
+        this.f9893A = 0.6666667f * f10
+        this.f9894B = f10 * 0.33333334f
     }
 
     private fun processData() {
@@ -290,9 +320,9 @@ class MultiColorLineChart @JvmOverloads constructor(
             stackBarDataList.add(stackBarData)
         }
         var z15 = true
-        processPointF()
+        processPointF2()
         if (!notSelected()) {
-            m7035b()
+            onTouchListener.m7035b()
         }
         if (!z16) {
             val arrayList = this.stackBarDataList
@@ -305,189 +335,19 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
     }
 
-    private fun processPointF() {
-        val mBarLists = stackBarDataList
-        val f9902h = stackBarDataList.size
-        val pointFColors = mutableListOf<MultiColorPathRenderer.PointFColor>()
-        val pointFs = mutableListOf<PointF>()
+
+    private fun processPointF2() {
+        val pointFColors = mutableListOf<PointFColor>()
         for ((index, item) in stackBarDataList.withIndex()) {
-            val curLevelCharge = item.levelAndCharge
-            val nextIndex = index + 1
-            var cornerType: Int
-            when {
-                index == 0 -> {
-                    val nextItem = stackBarDataList[nextIndex]
-                    if (notSelected()) {
-                        cornerType = if (f9902h <= 1) {
-                            4
-                        } else {
-                            if (curLevelCharge.charge == nextItem.levelAndCharge.charge) {
-                                1
-                            } else {
-                                4
-                            }
-                        }
-                    } else {
-                        cornerType = if (f9902h <= 1 || mIsHalfHour == 1) {
-                            4
-                        } else {
-                            if (curLevelCharge.charge == nextItem.levelAndCharge.charge) {
-                                1
-                            } else {
-                                4
-                            }
-                        }
-                    }
-                }
-
-                index == f9902h - 1 -> {
-                    if (notSelected()) {
-                        val prevItem = stackBarDataList[index - 1]
-                        cornerType = if (curLevelCharge.charge == prevItem.levelAndCharge.charge) {
-                            3
-                        } else {
-                            4
-                        }
-                    } else {
-                        //>>Lb8
-                        cornerType = if (startIndex == index && selectedTimeSpand == 1800000L) {
-                            4
-                        } else if (endIndex == index && selectedTimeSpand == 3600000L
-                            && isDifferentFromPreviousCharge(index, mBarLists)
-                        ) {
-                            4
-                        } else if (endIndex == index - 1 && f9902h - endIndex == 2) {
-                            4
-                        } else {
-                            3
-                        }
-                    }
-                }
-
-                index < mBarLists.size -> {
-                    //L103>L10d
-                    if (notSelected()) {
-                        //未选中时
-                        cornerType = if (index != mBarLists.size - 1) {
-                            if (isDifferentFromPreviousCharge(index, mBarLists)
-                                && isDifferentFromNextCharge(index, mBarLists)
-                            ) {
-                                4
-                            } else if (isDifferentFromPreviousCharge(index, mBarLists)) {
-                                1
-                            } else if (isDifferentFromNextCharge(index, mBarLists)) {
-                                3
-                            } else {
-                                2
-                            }
-                        } else {
-                            3
-                        }
-                    } else {
-                        //L13b
-                        val startIndex = startIndex
-                        val endIndex = endIndex
-                        cornerType =
-                            if (index == startIndex && isDifferentFromNextCharge(
-                                    index,
-                                    mBarLists
-                                )
-                            ) {
-                                4
-                            } else if (endIndex == index && isDifferentFromPreviousCharge(
-                                    index,
-                                    mBarLists
-                                )
-                            ) {
-                                4
-                            } else if (endIndex + 1 == index || startIndex == index) {
-                                1
-                            } else if (f9902h - 1 == index || startIndex - 1 == index || endIndex == index) {
-                                3
-                            } else {
-                                2
-                            }
-                    }
-                }
-
-                else -> cornerType = 1
-            }
-
-            if (cornerType == 1 || cornerType == 4) {
-                pointFs.clear()
-            }
-
-            if (index == 0 && f9902h > 0) {
-                item.calculatePoint(
-                    pointFs,
-                    curLevelCharge.level,
-                    cornerType, index
-                )
-            }
-
-            if (index in 1..<f9902h) {
-                val prevItem = mBarLists[index - 1]
-                item.calculatePoint(pointFs, prevItem.levelAndCharge.level, cornerType, index)
-            }
-
-            when (cornerType) {
-                1, 3, 4 -> {
-                    pointFs.forEach {
-                        pointFColors.add(PointFColor(it.x, it.y, item.drawLineColor))
-                    }
-                }
-            }
-
-
-        }
-        dLog { "pointFColors:${pointFColors.size}" }
-        pathRenderer.setData(pointFColors)
-    }
-
-    fun m7035b() {
-        for ((index, item) in stackBarDataList.withIndex()) {
-//            if (this.mSelectIndex == (this.mIsHalfHour + index) / 2) {
-//                item.f18276h = 1
-//                if (index == endIndex) {
-//                    Logcat.d(TAG, "j = $index ")
-//                    if (this.mIsHalfHour == 1 && (index == 0 || index == 47)) {
-//                        item.f18278j = -1
-//                    } else {
-//                        val nextIndex = index - 1
-//                        val nextBar = stackBarDataList[nextIndex]
-//                        Logcat.d(
-//                            TAG,
-//                            item.levelAndCharge.level.toString() + " " + item.levelAndCharge.level
-//                        )
-//                        if (item.levelAndCharge.level != 0 && nextBar.levelAndCharge.level != 0) {
-//                            if (item.levelAndCharge.level >= nextBar.levelAndCharge.level) {
-//                                item.f18278j = 2
-//                                nextBar.f18278j = 0
-//                            } else {
-//                                nextBar.f18278j = 1
-//                                item.f18278j = 0
-//                            }
-//                        } else if (item.levelAndCharge.level == 0) {
-//                            nextBar.f18278j = -1
-//                        } else if (nextBar.levelAndCharge.level == 0) {
-//                            item.f18278j = -1
-//                        } else {
-//                            Logcat.d(TAG, "invalid")
-//                        }
-//                    }
-//                }
-//                item.showBubble = true
-//            } else {
-//                item.f18276h = 0
-//                item.showBubble = false
-//            }
+            val preBar = stackBarDataList.getOrNull(index - 1) ?: stackBarDataList[0]
+            val preLevel = preBar.levelAndCharge.level
+            item.calculatePointF(preLevel, pointFColors)
+            pathRenderer.setData(pointFColors)
         }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-//        drawGrid(canvas)
-//        drawAxes(canvas)
         canvas.drawLine(
             chartX, chartY, chartX,
             chartStopY, hDashedLinePaint
@@ -498,11 +358,276 @@ class MultiColorLineChart @JvmOverloads constructor(
         )
         drawHorLineAndPrecent(canvas)
         //绘制曲线
+        processPointF2()
         pathRenderer.draw(canvas)
         stackBarDataList.forEach {
             it.drawBar(canvas)
         }
+        drawBarBubble(canvas)
         drawBottomLabels(canvas, chartX, mWidth)
+    }
+
+    private fun drawBarBubble(canvas: Canvas) {
+        val mBarLists = stackBarDataList
+        var bubbleDrawn = false
+        val iterator2 = mBarLists.iterator()
+        var j = 0
+        while (iterator2.hasNext()) {
+            val next = iterator2.next()
+            val nextJ = j + 1
+            if (j < 0) {
+                break
+            }
+
+            // 修复：添加条件判断，确保只在需要时绘制气泡
+            if (!next.showBubble || notSelected() || bubbleDrawn) {
+                j = nextJ
+                continue
+            }
+            val barDataState = next.state
+//            val state = next.f18278j
+            val lastIndex = mBarLists.size - 2
+            var levelAndCharge = next.levelAndCharge
+
+            if (j < lastIndex) {
+                val nextItem = mBarLists[nextJ]
+                if (levelAndCharge.level < nextItem.levelAndCharge.level) {
+                    levelAndCharge = nextItem.levelAndCharge
+                }
+            }
+            val y2 = next.y
+            val startX = next.x
+            val startY =
+                (((chartHeight - barBubbleTopMargin) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
+            Logcat.d(
+                "BubbleView", "BubbleView>>startX:$startX,startY:$startY,y2:$y2" +
+                        ",chartHeight:${chartHeight},barBubbleTopMargin:${barBubbleTopMargin}," +
+                        "levelAndCharge.level:${levelAndCharge.level}"
+            )
+            var m10476a = 0f
+            val bubbleStartX = when (barDataState) {
+                -1 -> {
+                    m10476a = dp2px(3.0f)
+                    startX + f9893A / 2f
+                }
+
+                1 -> {
+                    m10476a = dp2px(3.0f)
+                    startX + f9893A + f9894B / 2f
+                }
+
+                2 -> {
+                    m10476a = dp2px(3.0f)
+
+                    startX - f9894B / 2f
+                }
+
+                else -> startX
+            }
+            Logcat.d(
+                "BubbleView",
+                "barDataState:$barDataState,startX:$startX,f9893A:${f9893A},f9894B:${f9894B},startY:$startY,m10476a:$m10476a"
+            )
+            // 向上移动气泡，避免箭头覆盖曲线
+            val bubbleStartY = startY - m10476a
+            Logcat.d(
+                "BubbleView",
+                "bubbleStartX:$bubbleStartX,bubbleStartY:$bubbleStartY,startY:$startY,m10476a:$m10476a"
+            )
+            val point = SelectedItem(
+                bubbleStartX,
+                bubbleStartY,
+                selectedTime,
+                width.toFloat()
+            ).apply {
+                this.state = m7037d(startIndex, endIndex)
+            }
+            val bubbleView = BubbleView1(context, point)
+            if (!ScreenReaderUtils.m10472c()) {
+                val pointY = bubbleView.startY
+                val f27 = bubbleView.startX
+                val f28 = bubbleView.f22165m.toFloat()//固定值7dp
+                val f29 = f28 + f27
+                val f30 = pointY - bubbleView.f22166n
+                val f31 = f30 - 1.0f
+                val f32 = bubbleView.f22157e//right
+                val f33 = bubbleView.f22170r
+                val f34 = f32 - f33
+                val f35 = bubbleView.f22163k
+                val f36 = bubbleView.f22155c
+                val f37 = bubbleView.f22169q
+                val i18 = bubbleView.f22168p
+                val i19 = bubbleView.f22167o//边距固定值
+                val f45 = 2f
+                val f48 = bubbleView.f22162j//text width
+                val i20 = bubbleView.f22173u
+                val z10 = bubbleView.f22158f
+                val f40 = bubbleView.f22156d
+                var f14 = 0f
+                val rectF = bubbleView.f22172t
+                // 参考drawBubbleView方法中的边界处理逻辑，确保气泡不会超出视图边界
+                rectF.apply {
+                    // 参考drawBubbleView方法中的边界处理逻辑
+                    Logcat.d(
+                        "BubbleView",
+                        "f32:$f32,f33:$f33,f29:$f29,f27:$f27,f34:$f34,i19:$i19,rectF：$this"
+                    )
+                    if (f29 > f34) {
+                        // 气泡右侧超出边界
+                        f14 = (f30 - (i18 / f45)) - (f35 / f45)
+                        val left = f32 - f48 - (i19 * 2)
+                        val top = f30 - i20
+                        set(left, top, f32, f30)
+                        Logcat.d("BubbleView", "f32:$f32,f48:$f48,i19:$i19,rectF：$this")
+                        Logcat.d("BubbleView", "rectF：$this")
+                    } else if (f27 - (f48 / f45) > f36) {
+                        // 气泡在中间
+                        val f49 = f48 / f45
+                        val f20 = f27 - f49
+                        val left = f20 - i19.toFloat()
+                        val top = f30 - i20
+                        val right = f49 + f27 + i19.toFloat()
+                        set(max(0f, left), top, right, f30)
+                        Logcat.d("BubbleView", "rectF：$this")
+                    } else {
+                        // 气泡左侧可能超出边界，确保不会超出
+                        val left = f36 // 直接靠到左侧边界
+                        val top = f30 - i20
+                        val right = left + f48 + (i19 * 2)
+                        set(left, top, right, f30)
+                        Logcat.d("BubbleView", "rectF：$this")
+                    }
+                }
+                Logcat.d("BubbleView", "rectF：$rectF")
+                canvas.drawRoundRect(
+                    rectF,
+                    bubbleView.f22170r,
+                    bubbleView.f22171s,
+                    bubbleView.f22153a
+                )
+
+                // 绘制气泡下方的三角形箭头，调整方向向下
+                // 参考drawBubbleView方法中的处理方式，保持三角形形状不变
+
+                var f13 = 0f
+
+                if (f29 > f34) {
+                    f14 = (f30 - (i18 / 2f)) - (f35 / 2f)
+                    f13 = f32
+                } else {
+                    f13 = f37 + f33 + f36
+                    if (f29 >= f13) {
+                        Logcat.d("BubbleView", "normal")
+                        f13 = f29
+                    }
+                    f14 = f31
+                }
+
+                val f38 = f13
+                var f39 = f14
+                var f15 = 0f
+                var f16 = 0f
+
+                if (z10) {
+                    val f41 = f27 - f28
+                    f15 = f29
+                    if (f41 < f33 + f36) {
+                        f39 = (f30 - (i18 / 2f)) - (f35 / 2f)
+                        f16 = f36
+                    } else {
+                        f16 = (f40 - f36) - i19
+                        if (f41 <= f16) {
+                            Logcat.d("BubbleView", "normal")
+                            f16 = f41
+                        }
+                        f39 = f31
+                    }
+                } else {
+                    f15 = f29
+                    f16 = f38
+                }
+
+                var f42 = f27 - f28
+                var f17 = 0f
+                Logcat.d(
+                    "BubbleView",
+                    "trianglePath>>moveTo：[$f27, $pointY],lineTo：[$f16, $f39],f28:$f28,f37:$f37,f33:$f33,f36:$f36,f42:$f42"
+                )
+                if (f42 < f37 + f33 + f36) {
+                    f42 = f37 + f33 + f36
+                    f17 = (f30 - (i18 / 2f)) - (f35 / 2)
+                } else {
+                    val f43 = (f32 - f37) - f28
+                    if (f42 > f43) {
+                        f42 = f43
+                    } else {
+                        Logcat.d("BubbleView", "normal")
+                    }
+                    f17 = f31
+                }
+
+                var f18 = 0f
+                var f21 = 0f
+
+                if (z10) {
+                    if (f15 > ((f40 - f36) - f37) - f33) {
+                        f42 = f32 - f37
+                        f18 = (f30 - (i18 / 2f)) - (f35 / 2)
+                    } else {
+                        val f44 = i19 + f36 + f37
+                        if (f15 < f44) {
+                            f21 = f44
+                        } else {
+                            Logcat.d("BubbleView", "normal")
+                            f21 = f15
+                        }
+                        f42 = f21
+                        f18 = f31
+                    }
+                } else {
+                    f18 = f17
+                }
+
+                // 使用Path绘制气泡和三角形箭头，参考drawBubbleView方法
+                val aa = f27 - (f16 - f27)
+                val trianglePath = Path().apply {
+                    moveTo(f27, pointY) // 顶点
+                    lineTo(f16, f39) // 第一个点
+                    lineTo(aa, f39) // 第二个点
+                    close() // 闭合路径
+                }
+                Logcat.d(
+                    "BubbleView",
+                    "trianglePath>>moveTo：[$f27, $pointY],lineTo：[$f16, $f39],lineTo：[$aa, $f18],bubbleView.f22171s:${bubbleView.f22171s},bubbleHeiht:${rectF.height()}"
+                )
+                canvas.drawPath(trianglePath, bubbleView.f22153a)
+
+                // 绘制文本
+                val textPaint = bubbleView.f22154b
+                val fm = textPaint.fontMetrics
+                val textY = rectF.centerY() - fm.top / 2 - fm.bottom / 2
+
+                // 文字随气泡一起移动
+                val textX = rectF.left + bubbleView.f22167o.toFloat()
+                if (bubbleView.f22158f) {
+                    val scaleX = bubbleView.f22162j / 2 + rectF.left + bubbleView.f22167o.toFloat()
+                    val scaleY = bubbleView.f22163k / 2f
+                    canvas.scale(-1f, 1f, scaleX, scaleY)
+                }
+                Logcat.d("BubbleView", "text：${bubbleView.f22161i}")
+                canvas.drawText(
+                    bubbleView.f22161i,
+                    textX,
+                    textY,
+                    textPaint
+                )
+
+                // 标记已绘制气泡
+                bubbleDrawn = true
+            }
+
+            j = nextJ
+        }
     }
 
 
@@ -526,7 +651,7 @@ class MultiColorLineChart @JvmOverloads constructor(
             }
             canvas.drawText(
                 item,
-                x + index * gad +if(index == 0) textWidth / 2 else 0,
+                x + index * gad + if (index == 0) textWidth / 2 else 0,
                 (this.mHeight + bottomPadding).toFloat(),
                 textPaint
             )
@@ -592,11 +717,11 @@ class MultiColorLineChart @JvmOverloads constructor(
         this.batteryDataList.clear()
         this.batteryDataList.addAll(data)
         val currentTimeMillis = System.currentTimeMillis()
-        val dataSize = data.size
-        val endTime =
-            if (dataSize <= 0) getHalfTime(currentTimeMillis) + (currentTimeMillis - HALF_HOUR) else data.last().time
+        dataLength = data.size
+//        val endTime =
+//            if (dataLength <= 0) getHalfTime(currentTimeMillis) + (currentTimeMillis - HALF_HOUR) else data.last().time
         this.mIsHalfHour = 1
-        val size: Int = 48 - dataSize
+//        val size: Int = 48 - dataLength
 //        if (dataSize <= 48 && 1 <= size) {
 //            var index = 1
 //            while (true) {
@@ -625,7 +750,7 @@ class MultiColorLineChart @JvmOverloads constructor(
             }
             this.mStartTime = firstItem.time - 1800000L
         } else {
-            this.mStartTime = this.mEndTime - dataSize * 1800000L
+            this.mStartTime = this.mEndTime - dataLength * 1800000L
         }
         ViewCompat.setAccessibilityDelegate(this, barChartTouchHelper)
         dLog { "endTime = " + this.mEndTime }
@@ -671,7 +796,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
 
     companion object {
-        private const val TAG = "MultiColorLineChart"
+        const val TAG = "MultiColorLineChart"
 
         /**
          * 1分钟
@@ -784,6 +909,28 @@ class MultiColorLineChart @JvmOverloads constructor(
             return y
         }
     }
+
+    interface OnSlideListener {
+        fun onSlide(isDoNotIntercept: Boolean)
+    }
+
+    interface OnCallBack {
+        fun onCallback(selectedTime: Long, selectedTimeSpand: Long, isReset: Boolean)
+    }
+
+    var onSlideListener: OnSlideListener? = null
+        private set
+
+    fun setOnSlideListener(onSlideListener: OnSlideListener) {
+        this.onSlideListener = onSlideListener
+    }
+
+    var onCallBack: OnCallBack? = null
+        private set
+
+    fun setOnCallBack(onCallBack: OnCallBack) {
+        this.onCallBack = onCallBack
+    }
 }
 
 data class StackBarPointData(
@@ -798,6 +945,7 @@ data class StackBarPointData(
     var index = -1
     var charge: String = ""
     var state: Int = 1
+    var f18278j = 0
     var barWidth: Float = 0f
     var barOffset: Float = 0f
     val precentLevel: String
@@ -919,6 +1067,37 @@ data class StackBarPointData(
         }
     }
 
+    fun calculatePointF(preLevel: Int, pointFs: MutableList<PointFColor>): Point {
+        return calculatePointF(preLevel).apply {
+            pointFs.add(PointFColor(startX, startY, mDrawLineColor))
+            pointFs.add(PointFColor(stopX, stopY, mDrawLineColor))
+        }
+    }
+
+    fun calculatePointF(preLevel: Int): Point {
+        changePainColor()
+        val level = levelAndCharge.level
+        val emptySpacePercent = 100 - level
+        val emptySpaceHeight = emptySpacePercent * height / 100f
+        val yStart = y + emptySpaceHeight
+
+        val param3Percent = 100 - preLevel
+        val param3Height = param3Percent * height / 100f
+        val yParam3 = y + param3Height
+
+        val halfWidth = barOffset / 2f
+        val xLeft = x - halfWidth
+        val xRight = x + width - halfWidth
+        mBarPath = Path().apply {
+            moveTo(xLeft, yParam3)
+            lineTo(xRight, yStart)
+            lineTo(xRight, y + height)
+            lineTo(xLeft, y + height)
+            close()
+        }
+        return Point(xLeft, yParam3, xRight, yStart)
+    }
+
     val drawLineColor: Int
         get() = linePaint.color
 
@@ -928,7 +1107,7 @@ data class StackBarPointData(
 
     fun changePainColor() {
         val context = MainApplication.context
-
+        dLog { "changePainColor state:$state,charge:$charge" }
         when (state) {
             0, 2 -> {
                 barPaint.shader = createLinearGradient(noSelectedBgColor, noSelectedBgColor)
@@ -937,35 +1116,30 @@ data class StackBarPointData(
             }
 
             1 -> {
-                if (charge == "true") {
-                    barPaint.shader = createLinearGradient(chargeLineColor50, chargeLineColor10)
-                    linePaint.color = chargeLineNewColor
-                    mDrawLineColor = chargeLineNewColor
-                } else if (charge == "low") {
-                    barPaint.shader =
-                        createLinearGradient(lowBatteryLineColor50, lowBatteryLineColor10)
-                    linePaint.color = lowBatteryLineNewColor
-                    mDrawLineColor = lowBatteryLineNewColor
-                } else {
-                    barPaint.shader =
-                        createLinearGradient(noChargeLineColor50, noChargeLineColor10)
-                    linePaint.color = noChargeLineNewColor
-                    mDrawLineColor = noChargeLineNewColor
+                when (charge) {
+                    "true" -> {
+                        barPaint.shader = createLinearGradient(chargeLineColor50, chargeLineColor10)
+                        linePaint.color = chargeLineNewColor
+                        mDrawLineColor = chargeLineNewColor
+                    }
+
+                    "low" -> {
+                        barPaint.shader =
+                            createLinearGradient(lowBatteryLineColor50, lowBatteryLineColor10)
+                        linePaint.color = lowBatteryLineNewColor
+                        mDrawLineColor = lowBatteryLineNewColor
+                    }
+
+                    else -> {
+                        barPaint.shader =
+                            createLinearGradient(noChargeLineColor50, noChargeLineColor10)
+                        linePaint.color = noChargeLineNewColor
+                        mDrawLineColor = noChargeLineNewColor
+                    }
                 }
 
             }
         }
-
-//        curvePaint.setColor(getColorResource(
-//            R.color.battery_not_select_bg_bottom,
-//            R.color.battery_not_select_bg_bottom_card
-//        ));
-
-//        val bgColor = resources.getColor(R.color.battery_chart_set)
-//        f18283o.shader = b(bgColor, bgColor)
-
-        // Common paint settings
-//        f18283o.isAntiAlias = true
         barPaint.isAntiAlias = true
         barPaint.isAntiAlias = true
         barPaint.isDither = true
@@ -996,6 +1170,188 @@ data class StackBarPointData(
             colorEnd,
             Shader.TileMode.CLAMP
         )
+    }
+
+}
+
+data class Point(val startX: Float, val startY: Float, val stopX: Float, val stopY: Float)
+
+
+class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouchListener {
+    private var state: Int = 0
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouch(v: View, event: MotionEvent): Boolean {
+        val action = event.action
+        val x = event.x
+        val y = event.y
+        var result = false
+        val pointF = hostView.mSelectPointF
+        when (action) {
+            MotionEvent.ACTION_DOWN -> {
+//                hostView.f9915u = hostView.mSelectIndex
+                state = 0
+                pointF.set(event.x, event.y)
+            }
+
+            MotionEvent.ACTION_MOVE -> {
+                if (!m7038e(event.x)) {
+                    return false
+                }
+                if (state == 1 || state == 2) {
+                    m7042k(event.x)
+                } else {
+                    val yDiff = abs(event.y - pointF.y)
+                    val xDiff = abs(event.x - pointF.x)
+                    if (yDiff > xDiff) {
+                        state = 2
+                    } else if (abs(event.x - pointF.x) > 60f) {
+                        state = 1
+                        m7042k(event.x)
+                    }
+                }
+            }
+
+            MotionEvent.ACTION_UP -> {
+                if (event.y < hostView.barBubbleTopMargin) {
+                    return false
+                }
+                if (m7038e(event.x)) {
+                    val index = (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
+                    if (hostView.mSelectIndex == index) {
+                        Logcat.d(MultiColorLineChart.TAG, "reset bar status.")
+                        m7040i()
+                        result = true
+                    }
+                }
+                if (result) {
+                    return true
+                }
+                if (m7038e(event.x)) {
+                    val index = (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
+                    if (index != hostView.mSelectIndex) {
+                        if (m7038e(event.x)) {
+                            val selectedIndex =
+                                (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
+                            hostView.setSelectIndex(selectedIndex)
+                            m7035b()
+                            hostView.invalidate()
+                        }
+                    }
+                }
+                if (!hostView.notSelected()) {
+                    val timeSpan = hostView.selectedTimeSpand
+                    hostView.onCallBack?.onCallback(hostView.selectedTime, timeSpan, false)
+                }
+                hostView.onSlideListener?.onSlide(true)
+            }
+
+            else -> {
+                if (event.y < hostView.barBubbleTopMargin) {
+                    return false
+                }
+                if (!hostView.notSelected()) {
+                    val timeSpan = hostView.selectedTimeSpand
+                    hostView.onCallBack?.onCallback(hostView.selectedTime, timeSpan, false)
+                }
+                hostView.onSlideListener?.onSlide(true)
+            }
+        }
+        return true
+    }
+
+    fun m7038e(x: Float): Boolean {
+        val size = hostView.dataLength
+        val result = if (size > 1 && size % 2 != hostView.mIsHalfHour) {
+            1
+        } else {
+            0
+        }
+        return !(x >= (hostView.mBarWidth * (size + result)) + hostView.mLeftVerticalLineWidth || x <= hostView.mLeftVerticalLineWidth)
+    }
+
+    fun m7042k(x: Float) {
+        if ((getSelectedBarIndex(x) + hostView.mIsHalfHour) / 2 != hostView.mSelectIndex && m7038e(x)) {
+            hostView.setSelectIndex((getSelectedBarIndex(x) + hostView.mIsHalfHour) / 2)
+            m7035b()
+            hostView.invalidate()
+        }
+        val aVar = hostView.onSlideListener
+        if (aVar != null) {
+            val z10 = state == 2
+            hostView.parent.requestDisallowInterceptTouchEvent(true)
+            aVar.onSlide(z10)
+        }
+    }
+
+    private val mNumLists = hostView.batteryDataList
+    private val mBarLists = hostView.stackBarDataList
+    private fun getSelectedBarIndex(x: Float): Int {
+        var i8 = ((x - hostView.mLeftVerticalLineWidth) / hostView.mBarWidth).toInt()
+        Logcat.d(MultiColorLineChart.TAG, "getSelectedBarIndex $i8,\n" +
+                "x:$x,hostView.mLeftVerticalLineWidth:${hostView.mLeftVerticalLineWidth}\n" +
+                ",hostView.mBarWidth:${hostView.mBarWidth},\n" +
+                "mNumLists.size:${mNumLists.size},mBarLists.size:${mBarLists.size},\n" +
+                "hostView.dataLength:${hostView.dataLength}"
+        )
+        if (i8 < 0 || ((mNumLists.isNotEmpty()) && i8 > mNumLists.size)) {
+            i8 = 0
+        }
+        Logcat.d(MultiColorLineChart.TAG, "getSelectedBarIndex $i8")
+        return i8
+    }
+
+    fun m7040i() {
+        hostView.mSelectIndex = -1
+//        f9913s.clear()
+        if (mBarLists.size <= 48) {
+            for (i4 in 0..<mBarLists.size) {
+                mBarLists[i4].state = 1
+            }
+        }
+        hostView.onCallBack?.onCallback(BatteryStatisticsHelper.m934d(), 3600000L, true)
+        hostView.invalidate()
+    }
+
+    fun m7035b() {
+        for (index in 0..<mBarLists.size) {
+            val barData = mBarLists[index]
+            if (hostView.mSelectIndex == (hostView.mIsHalfHour + index) / 2) {
+                barData.state = 1
+                if (index == hostView.endIndex) {
+                    Logcat.d(MultiColorLineChart.TAG, "j = $index ")
+                    if (hostView.mIsHalfHour == 1 && (index == 0 || index == 47)) {
+                        barData.f18278j = -1
+                    } else {
+                        val i8 = index - 1
+                        val prevBarData = mBarLists[i8]
+                        Logcat.d(
+                            MultiColorLineChart.TAG,
+                            prevBarData.levelAndCharge.level.toString() + " " + barData.levelAndCharge.level
+                        )
+                        if (barData.levelAndCharge.level != 0 && prevBarData.levelAndCharge.level != 0) {
+                            if (barData.levelAndCharge.level >= prevBarData.levelAndCharge.level) {
+                                barData.f18278j = 2
+                                prevBarData.f18278j = 0
+                            } else {
+                                prevBarData.f18278j = 1
+                                barData.f18278j = 0
+                            }
+                        } else if (barData.levelAndCharge.level == 0) {
+                            prevBarData.f18278j = -1
+                        } else if (prevBarData.levelAndCharge.level == 0) {
+                            barData.f18278j = -1
+                        } else {
+                            Logcat.d(MultiColorLineChart.TAG, "invalid")
+                        }
+                    }
+                }
+                barData.showBubble = true
+            } else {
+                barData.state = 0
+                barData.showBubble = false
+            }
+        }
     }
 
 }

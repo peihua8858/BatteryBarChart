@@ -132,6 +132,61 @@ object BatteryStateHelper {
         LevelModel(3, "low"),
     )
 
+    private val LEVELS_HALF_HOUR1 = arrayOf(
+        LevelModel(3, "true"),
+        LevelModel(5, "true"),
+        LevelModel(6, "true"),
+        LevelModel(8, "true"),
+        LevelModel(10, "true"),
+        LevelModel(18, "true"),
+        LevelModel(22, "true"),
+        LevelModel(25, "true"),
+        LevelModel(40, "true"),
+        LevelModel(60, "true"),
+        LevelModel(80, "true"),
+        LevelModel(99, "true"),
+        LevelModel(100, "true"),
+        LevelModel(95, "false"),
+        LevelModel(90, "false"),
+        LevelModel(85, "false"),
+        LevelModel(80, "false"),
+        LevelModel(70, "false"),
+        LevelModel(65, "false"),
+        LevelModel(60, "false"),
+        LevelModel(50, "false"),
+        LevelModel(40, "false"),
+        LevelModel(32, "false"),
+        LevelModel(30, "false"),
+        LevelModel(28, "false"),
+        LevelModel(26, "false"),
+        LevelModel(23, "false"),
+        LevelModel(22, "false"),
+        LevelModel(18, "low"),
+        LevelModel(16, "low"),
+        LevelModel(15, "low"),
+        LevelModel(10, "low"),
+        LevelModel(10, "low"),
+        LevelModel(8, "low"),
+        LevelModel(6, "low"),
+        LevelModel(5, "low"),
+        LevelModel(3, "low"),
+        LevelModel(18, "true"),
+        LevelModel(36, "true"),
+        LevelModel(45, "true"),
+        LevelModel(60, "true"),
+        LevelModel(75, "true"),
+        LevelModel(80, "true"),
+        LevelModel(90, "true"),
+        LevelModel(95, "true"),
+        LevelModel(100, "true"),
+        LevelModel(95, "false"),
+        LevelModel(90, "false"),
+        LevelModel(85, "false"),
+        LevelModel(65, "false"),
+//        LevelModel(50, "false"),
+//        LevelModel(30, "false"),
+    )
+
     fun fakeData(): ArrayList<LevelAndCharge> {
         val time = BatteryStatisticsHelper.m934d()
         //这里不需要+60000
@@ -146,7 +201,7 @@ object BatteryStateHelper {
         val currentTime = System.currentTimeMillis()
         dLog { ">>>>currentTime:${TimeUtil.formatTime(currentTime)}" }
         for ((index, time) in ((startTime+1800000) until currentTime step 1800000).withIndex()) {
-            val levelModel = LEVELS_HALF_HOUR[index]
+            val levelModel = LEVELS_HALF_HOUR1[index]
             arrayList.add(LevelAndCharge(levelModel.level, levelModel.charge, time))
             dLog { ">>>>time:${TimeUtil.formatTime(time)}" }
         }

@@ -11,7 +11,7 @@ import com.android.hwsystemmanager.R;
 public final class BatterHistoryUtils {
 
     public interface OnSlideListener {
-        void onSlide(boolean z10);
+        void onSlide(boolean isDoNotIntercept);
     }
 
     public interface OnCallBack {
