@@ -131,7 +131,6 @@
                 <FrameLayout
                     android:id="@+id/battery_bar_chart_layout"
                     android:layout_width="match_parent"
-                    android:background="@color/charge_rect_color"
                     android:layout_height="wrap_content">
 
                     <com.android.hwsystemmanager.widgets.BatteryHistoryOnlyChart
@@ -153,6 +152,8 @@
             <com.android.hwsystemmanager.multicolor.MultiColorLineChart
                 android:id="@+id/battery_line_chart"
                 android:layout_width="match_parent"
+                android:paddingBottom="48dp"
+                android:paddingStart="16dp"
                 android:layout_height="wrap_content" />
         </LinearLayout>
     </LinearLayout>

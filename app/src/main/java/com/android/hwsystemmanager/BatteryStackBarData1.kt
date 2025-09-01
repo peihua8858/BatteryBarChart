@@ -83,7 +83,10 @@ class BatteryStackBarData1(
         val halfWidth = barOffset / 2f
         val xLeft = startX - halfWidth
         val xRight = startX + width - halfWidth
-
+        Logcat.d(
+            "BatteryStackBarData>>>>aaa",
+            "x:$startX,y:$startY,width:$width,height:$height,preLevel:$preLevel,level is $level,xLeft:$xLeft,yParam3:$yParam3,xRight:$xRight,yStart:$yStart"
+        )
         when (type) {
             1 -> {
                 path.moveTo(xLeft, yParam3)

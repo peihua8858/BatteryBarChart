@@ -158,7 +158,7 @@ class BatteryBarChart1 @JvmOverloads constructor(
             val f13 = this.f9908n
             val f14 = this.chartHeight - f13
             val levelAndCharge = mNumLists[i4]
-            Logcat.d("BatteryBarChart", ">>>>[ x:$f12,y:$f13]")
+            Logcat.d("BatteryBarChart", ">>>>chartHeight:$chartHeight,[ x:$f12,y:$f13]")
             val batteryStackBarData = BatteryStackBarData1(f12, f13, f11, f14, levelAndCharge)
             val m10301a = mNumLists[i4].charge == "true"
             z10 = i4 < 47 && mNumLists[i4 + 1].charge == "true"

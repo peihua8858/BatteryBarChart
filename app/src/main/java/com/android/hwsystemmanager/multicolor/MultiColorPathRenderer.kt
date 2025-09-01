@@ -17,7 +17,12 @@ import com.google.gson.Gson
  * 绘制多色路径绘制
  */
 class MultiColorPathRenderer {
-    private var paint = Paint()
+    private var paint = Paint().apply {
+        // 3. 初始化画笔
+        this.style = Paint.Style.STROKE
+        this.strokeWidth = 8f
+        this.isAntiAlias = true
+    }
     private var colors: IntArray = intArrayOf(0)
 
     /**
@@ -80,10 +85,6 @@ class MultiColorPathRenderer {
             positions[2 * i + 1] = (i + 1) / segmentColors.size.toFloat()
         }
 
-        // 3. 初始化画笔
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = 8f
-        paint.isAntiAlias = true
     }
 
     // 设置线宽

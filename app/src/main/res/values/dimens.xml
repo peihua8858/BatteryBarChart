@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <dimen name="battery_chart_height">162dp</dimen>
+    <dimen name="battery_chart_height">190dp</dimen>
     <dimen name="battery_detail_soft_bar_height">72dp</dimen>
     <dimen name="battery_history_actionBar_height">48dp</dimen>
     <dimen name="battery_history_chart_aboveTimeText_size">10dp</dimen>
     <dimen name="battery_history_chart_belowTimeText_size">12dp</dimen>
-    <dimen name="battery_history_chart_bottom_padding">20dp</dimen>
+    <dimen name="battery_history_chart_bottom_padding">48dp</dimen>
     <dimen name="battery_history_chart_bottomline_size">0.75dp</dimen>
     <dimen name="battery_history_chart_dateText_size">11dp</dimen>
     <dimen name="battery_history_chart_left_padding">24dp</dimen>
