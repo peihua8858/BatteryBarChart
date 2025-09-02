@@ -1,11 +1,13 @@
 package com.android.hwsystemmanager.widgets
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Rect
 import android.graphics.Shader
+import android.os.Build
 import android.text.TextPaint
 import android.text.format.DateFormat
 import android.text.format.DateUtils
@@ -16,9 +18,14 @@ import com.android.hwsystemmanager.BatteryStatisticsHelper
 import com.android.hwsystemmanager.LevelAndCharge
 import com.android.hwsystemmanager.MainApplication
 import com.android.hwsystemmanager.R
-import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.Logcat
+import com.android.hwsystemmanager.utils.createDashedPaint
+import com.android.hwsystemmanager.utils.createPaint
+import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dp2px
+import com.android.hwsystemmanager.utils.getDimension
+import com.android.hwsystemmanager.utils.getDimensionPixelOffset
+import com.android.hwsystemmanager.utils.getDimensionPixelSize
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import java.text.NumberFormat
@@ -26,6 +33,7 @@ import java.util.Calendar
 import java.util.Locale
 import kotlin.math.abs
 
+@SuppressLint("ResourceType")
 class BatteryHistoryOnlyChart @JvmOverloads constructor(
     context: Context,
     attributeSet: AttributeSet? = null,
@@ -39,268 +47,256 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
     var f9926F: Float = 0f
     var f9927G: Float = 0f
     var f9928H: Float = 0f
-    val f9929I: Int
+    val barBubbleTopMargin: Int
 
     //f9930a
-    var mEndTime: Long = 0
+    private var mEndTime: Long = 0
 
     //f9931b
-    var mStartTime: Long = 0
-    val f9932c: Int = resources.getDimensionPixelOffset(R.dimen.battery_history_chart_linewidth)
+    private var mStartTime: Long = 0
+    private val chartLineWidth: Int = getDimensionPixelOffset(R.dimen.battery_history_chart_linewidth)
 
     var f9933d: Int = 0
     var f9934e: Int = 0
-    val f9935f: Int = resources.getDimensionPixelOffset(R.dimen.battery_history_chart_bottom_padding)
-    val f9936g: Float
-    val f9937h: Int
+    private val chartBottomPadding: Int = getDimensionPixelOffset(R.dimen.battery_history_chart_bottom_padding)
+    private val chartHeight: Float = getDimension(R.dimen.battery_chart_height)
+    val aboveTimeTextSize: Float
+
+    //横向底部线条画笔
     val f9938i: Paint
+
+    //横向线条画笔
     val f9939j: Paint
+
+    //纵向虚线条左侧画笔
     val f9940k: Paint
+
+    //纵向虚线条中间（凌晨时间点）画笔
     val f9941l: Paint
+
+    //纵向虚线条右侧画笔
     val f9942m: Paint
+
+    //底部文字画笔
     val f9943n: TextPaint
     val f9944o: TextPaint
     val f9945p: TextPaint
     val f9946q: TextPaint
-    val f9947r: ArrayList<C2673a>
-    val f9948s: ArrayList<C2675c>
-    val f9949t: ArrayList<C2674b>
-    var f9950u: C2675c? = null
+    val f9947r: ArrayList<DateTimeLabel> = ArrayList()
+    val f9948s: ArrayList<TimeLabel> = ArrayList()
+    val f9949t: ArrayList<PercentageLabel> = ArrayList()
+    var f9950u: TimeLabel? = null
     var f9951v: Int = 0
     var f9952w: Int = 0
     var f9953x: Int = 0
     var f9954y: Int = 0
     var f9955z: Boolean = false
+    private val blowTextTopMargin: Int = dp2px(48)
 
-
-    class C2673a(paint: TextPaint, f10: Float, calendar: Calendar) {
-        val f9956a: Float
-        val f9957b: String
-        val f9958c: Int
-        val f9959d: Int
+    //C2673a
+    class DateTimeLabel(paint: TextPaint, positionX: Float, calendar: Calendar) {
+        val posX: Float
+        val dateStr: String
+        val width: Int
+        val height: Int
 
         init {
             val obj = DateFormat.format(
                 DateFormat.getBestDateTimePattern(Locale.getDefault(), "Md"),
                 calendar
             ).toString()
-            this.f9957b = obj
+            this.dateStr = obj
             val rect = Rect()
             paint.getTextBounds(obj, 0, obj.length, rect)
-            this.f9959d = rect.height()
-            this.f9958c = rect.width()
-            this.f9956a = f10
+            this.height = rect.height()
+            this.width = rect.width()
+            this.posX = positionX
         }
     }
 
 
-    class C2674b(paint: TextPaint, i4: Int, i8: Int, i9: Int, i10: Int) {
-        val f9960a: Int
-        val f9961b: Int
-        val f9962c: String
-        val f9963d: Int
+    //C2674b
+    class PercentageLabel(paint: TextPaint, xPosition: Int, yBase: Int, yAdjustment: Int, percentage: Int) {
+        val xCoordinate: Int
+        val yCoordinate: Int
+        val formattedPercentage: String
+        val textHeight: Int
 
         init {
-            val format = NumberFormat.getPercentInstance().format(i10 / 100.0)
-            this.f9962c = format
+            val format = NumberFormat.getPercentInstance().format(percentage / 100.0)
+            this.formattedPercentage = format
             val rect = Rect()
             paint.getTextBounds(format, 0, format.length, rect)
             val height = rect.height()
-            this.f9963d = height
-            this.f9960a = if (isLayoutRtl) i4 else i4 - rect.width()
-            this.f9961b = (height / 2) + ((i8 + i9) - ((i10 * i9) / 100))
+            this.textHeight = height
+            this.xCoordinate = if (isLayoutRtl) xPosition else xPosition - rect.width()
+            this.yCoordinate = (height / 2) + ((yBase + yAdjustment) - ((percentage * yAdjustment) / 100))
         }
     }
 
 
-    class C2675c(paint: TextPaint, val f9964a: Int, i8: Int, val f9965b: String) {
-        val f9966c: Int
-
-
-        val f9967d: Int
+    //C2675c
+    class TimeLabel(paint: TextPaint, val timePosition: Int, i8: Int, val label: String) {
+        val labelHeight: Int
+        val labelWidth: Int
 
         init {
             val rect = Rect()
-            paint.getTextBounds(f9965b, 0, f9965b.length, rect)
+            paint.getTextBounds(label, 0, label.length, rect)
             val height = rect.height()
-            this.f9967d = rect.width()
-            this.f9966c = (height / 2) + i8
+            this.labelWidth = rect.width()
+            this.labelHeight = (height / 2) + i8
         }
     }
 
 
     init {
-//        resources.getDimension(R.dimen.battery_history_chart_line_text_margin)
-        this.f9936g = resources.getDimension(R.dimen.battery_chart_height)
-        val dimensionPixelSize =
-            resources.getDimensionPixelSize(R.dimen.battery_history_chart_aboveTimeText_size)
-        this.f9937h = dimensionPixelSize
-        val dimensionPixelSize2 =
-            resources.getDimensionPixelSize(R.dimen.battery_history_chart_belowTimeText_size)
-        this.f9947r = ArrayList()
-        this.f9948s = ArrayList()
-        this.f9949t = ArrayList()
-        this.f9929I = resources.getDimension(R.dimen.margin_bar_top_bubble).toInt()
-        val valueOf = resources.getDimensionPixelSize(R.dimen.battery_history_chart_bottomline_size)
-        val valueOf2 =
-            resources.getDimensionPixelSize(R.dimen.battery_history_chart_y_line_size_card)
-        val z10 = true
-        val intValue = (if (z10) valueOf2 else valueOf)
-        val intValue2 =
-            (if (z10) resources.getDimensionPixelSize(R.dimen.battery_history_chart_x_line_size_card) else resources.getDimensionPixelSize(
-                R.dimen.battery_history_chart_bottomline_size
-            ))
-        val intValue3 =
-            (if (z10) resources.getDimensionPixelSize(R.dimen.battery_history_chart_y_line_size_card) else resources.getDimensionPixelSize(
-                R.dimen.battery_history_chart_bottomline_size
-            ))
-        val dimensionPixelSize3 =
-            resources.getDimensionPixelSize(R.dimen.battery_history_chart_dateText_size)
-        this.f9939j = BatteryHistoryChartPaintFactory.m11666b(intValue2)
-        val paint = Paint(1)
-        paint.color = context.resources.getColor(
-            (if (z10) Integer.valueOf(R.color.stroke_bottom_line_color_card) else Integer.valueOf(
-                R.color.stroke_bottom_line_color
-            )), null
-        )
-        paint.style = Paint.Style.STROKE
-        paint.strokeWidth = intValue3.toFloat()
-        this.f9938i = paint
-        this.f9940k = BatteryHistoryChartPaintFactory.m11667c(intValue)
-        this.f9941l = BatteryHistoryChartPaintFactory.m11667c(intValue)
-        this.f9942m = BatteryHistoryChartPaintFactory.m11667c(intValue)
-        this.f9945p = BatteryHistoryChartPaintFactory.m11665a(dimensionPixelSize)
-        this.f9946q = BatteryHistoryChartPaintFactory.m11665a(dimensionPixelSize2)
-        this.f9943n = BatteryHistoryChartPaintFactory.m11665a(dimensionPixelSize3)
-        val textPaint = TextPaint(1)
-        textPaint.color = AttributeParseUtils.m14218a(android.R.attr.textColorSecondary, false)
-        textPaint.isAntiAlias = true
-        textPaint.textSize = dimensionPixelSize3.toFloat()
-        this.f9944o = textPaint
+        this.aboveTimeTextSize = getDimension(R.dimen.battery_history_chart_aboveTimeText_size)
+        val belowTimeTextSize = getDimension(R.dimen.battery_history_chart_belowTimeText_size)
+        this.barBubbleTopMargin = getDimensionPixelSize(R.dimen.margin_bar_top_bubble)
+        val bottomLineSize = getDimension(R.dimen.battery_history_chart_bottomline_size)
+        val xLineSize = getDimension(R.dimen.battery_history_chart_x_line_size_card)
+        val yLineSize = getDimension(R.dimen.battery_history_chart_y_line_size_card)
+        val z10 = Build.VERSION.SDK_INT > Build.VERSION_CODES.O_MR1
+        val intValue = (if (z10) yLineSize else bottomLineSize)
+        val intValue2 = if (z10) xLineSize else bottomLineSize
+        val dateTextSize = getDimension(R.dimen.battery_history_chart_dateText_size)
+        this.f9939j = createDashedPaint(intValue2, R.color.stroke_line_color_card)
+        this.f9938i = createPaint(intValue, R.color.stroke_bottom_line_color_card)
+        this.f9940k = createDashedPaint(intValue, R.color.stroke_y_line_color_card)
+        this.f9941l = createDashedPaint(intValue, R.color.stroke_y_line_color_card)
+        this.f9942m = createDashedPaint(intValue, R.color.stroke_y_line_color_card)
+        this.f9945p = createTextPaint(aboveTimeTextSize)
+        this.f9946q = createTextPaint(belowTimeTextSize)
+        this.f9943n = createTextPaint(dateTextSize)
+        this.f9944o = createTextPaint(dateTextSize)
     }
 
 
-    fun m7044a(str: String?) {
-        val str2: String?
+    //m7044a
+    fun updateContentDescription(str: String?) {
+        val currentContentDescription: String?
         val contentDescription = contentDescription
-        str2 = contentDescription?.toString()
-        setContentDescription("$str2$str;")
+        currentContentDescription = contentDescription?.toString()
+        setContentDescription("$currentContentDescription$str;")
     }
 
 
-    fun m7045b(canvas: Canvas, c2674b: C2674b) {
+    //m7045b
+    fun drawBatteryHistoryText(canvas: Canvas, data: PercentageLabel) {
         val arrayList = this.f9949t
-        if (abs(arrayList[1].f9961b - arrayList[0].f9961b) >= arrayList[1].f9963d + this.f9932c) {
-            val f10 = c2674b.f9960a.toFloat()
-            val f11 = c2674b.f9961b.toFloat()
+        if (abs(arrayList[1].yCoordinate - arrayList[0].yCoordinate) >= arrayList[1].textHeight + this.chartLineWidth) {
+            val x = data.xCoordinate.toFloat()
+            val y = data.yCoordinate.toFloat()
             val textPaint = this.f9944o
-            val str = c2674b.f9962c
-            canvas.drawText(str, f10, f11, textPaint)
-            m7044a(str)
+            val str = data.formattedPercentage
+            canvas.drawText(str, x, y, textPaint)
+            updateContentDescription(str)
         }
     }
 
 
-    fun m7046c(canvas: Canvas, c2675c: C2675c, f10: Float, f11: Float) {
-        val str = c2675c.f9965b
-        val m7050h = m7050h(str)
-        var textPaint: TextPaint? = this.f9945p
-        var textPaint2: TextPaint? = this.f9946q
+    //m7046c
+    fun drawSplitTextOnCanvas(canvas: Canvas, c2675c: TimeLabel, f10: Float, f11: Float) {
+        val str = c2675c.label
+        val splitStrings = splitStringByDigits(str)
+        var textPaint = this.f9945p
+        var textPaint2 = this.f9946q
         if (this.f9955z) {
             textPaint2 = textPaint
             textPaint = textPaint2
         }
-        val str2 = m7050h[0] as String
-        val f12 = c2675c.f9966c.toFloat()
-        canvas.drawText(str2, f11, f12, textPaint!!)
-        m7044a(str)
-        canvas.drawText((m7050h[1] as String), f11, f12 + f10, textPaint2!!)
-        m7044a(str)
+        val str2 = splitStrings[0]
+        val f12 = c2675c.labelHeight.toFloat()
+        canvas.drawText(str2, f11, f12, textPaint)
+        updateContentDescription(str)
+        canvas.drawText(splitStrings[1], f11, f12 + f10, textPaint2)
+        updateContentDescription(str)
     }
 
 
-    fun m7047e(): Boolean {
-        val z10 = this.mEndTime - this.mStartTime >= 82800000
-        return z10 && !DateFormat.is24HourFormat(context)
+    private fun shouldUseAmPmNotation(): Boolean {
+        val durationInMilliseconds = this.mEndTime - this.mStartTime
+        return durationInMilliseconds >= 82800000 && !DateFormat.is24HourFormat(context)
     }
 
-
-    fun m7048f(calendar: Calendar, i4: Int) {
-        val i8: Int
+    //m7048f
+    fun addTimePointToCalendar(calendar: Calendar, initialPosition: Int) {
+        val adjustedPosition: Int
         val timeInMillis =
             (((calendar.timeInMillis - this.mStartTime) * this.f9924D) / 86400000).toInt()
-        i8 = if (isLayoutRtl) {
-            i4 - timeInMillis
+        adjustedPosition = if (isLayoutRtl) {
+            initialPosition - timeInMillis
         } else {
-            i4 + timeInMillis
+            initialPosition + timeInMillis
         }
-        f9947r.add(C2673a(this.f9943n, i8.toFloat(), calendar))
+        f9947r.add(DateTimeLabel(this.f9943n, adjustedPosition.toFloat(), calendar))
     }
 
-
-    fun m7049g(str: String): Int {
-        if (m7047e()) {
-            val m7050h = m7050h(str)
+    //m7049g
+    fun calculateMaxTextWidth(str: String): Int {
+        if (shouldUseAmPmNotation()) {
+            val parts = splitStringByDigits(str)
             val textPaint = this.f9946q
-            var measureText = textPaint.measureText(m7050h[1])
-            val measureText2 = textPaint.measureText(m7050h[0])
-            if (measureText < measureText2) {
-                measureText = measureText2
+            var maxMeasureText = textPaint.measureText(parts[1])
+            val measureText2 = textPaint.measureText(parts[0])
+            if (maxMeasureText < measureText2) {
+                maxMeasureText = measureText2
             }
-            return measureText.toInt()
+            return maxMeasureText.toInt()
         }
         return f9943n.measureText(str).toInt()
     }
 
-
-    fun m7050h(str: String): ArrayList<String> {
-        val arrayList: ArrayList<String> = ArrayList()
+    //m7050h
+    fun splitStringByDigits(str: String): ArrayList<String> {
+        val result: ArrayList<String> = ArrayList()
         val length = str.length
         if (Character.isDigit(str[0])) {
             this.f9955z = true
-            var i4 = 0
-            for (i8 in 0..<length) {
-                if (Character.isDigit(str[i8])) {
-                    i4 = i8
+            var index = 0
+            for (i in 0..<length) {
+                if (Character.isDigit(str[i])) {
+                    index = i
                 }
             }
-            val i9 = i4 + 1
+            val nextIndex = index + 1
             try {
-                val substring = str.substring(0, i9)
-                arrayList.add(substring)
-                val substring2 = str.substring(i9 + 1, length)
-                arrayList.add(substring2)
-            } catch (unused: IndexOutOfBoundsException) {
-                arrayList.add("")
-                arrayList.add("")
+                val firstPart = str.substring(0, nextIndex)
+                result.add(firstPart)
+                val secondPart = str.substring(nextIndex + 1, length)
+                result.add(secondPart)
+            } catch (e: IndexOutOfBoundsException) {
+                result.add("")
+                result.add("")
                 Logcat.d("BatteryHistoryOnlyChart", "Index out of string bounds.")
             }
-            return arrayList
+            return result
         }
-        var i10 = 0
+        var digitPosition = 0
         while (true) {
-            if (i10 < length) {
-                if (Character.isDigit(str[i10])) {
+            if (digitPosition < length) {
+                if (Character.isDigit(str[digitPosition])) {
                     break
                 }
-                i10++
+                digitPosition++
             } else {
-                i10 = 0
+                digitPosition = 0
                 break
             }
         }
-        val substring3 = str.substring(0, i10)
-        arrayList.add(substring3)
-        val substring4 = str.substring(i10, length)
-        arrayList.add(substring4)
-        return arrayList
+        val prefix = str.substring(0, digitPosition)
+        result.add(prefix)
+        val suffix = str.substring(digitPosition, length)
+        result.add(suffix)
+        return result
     }
 
     public override fun onDraw(canvas: Canvas) {
         val z10: Boolean
-        val arrayList: ArrayList<C2673a>?
+        val arrayList: ArrayList<DateTimeLabel>?
         var i4: Int
-        var i8: Int
+        var i8: Float
         val i9: Int
         val i10: Int
         val f12: Float
@@ -353,27 +349,27 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
         val arrayList2 = this.f9949t
         if (arrayList2.size == 2) {
             val c2674b = arrayList2[0]
-            m7045b(canvas, c2674b)
+            drawBatteryHistoryText(canvas, c2674b)
             val c2674b2 = arrayList2[1]
-            m7045b(canvas, c2674b2)
+            drawBatteryHistoryText(canvas, c2674b2)
         }
-        val i16 = this.f9951v
-        val i17 = this.f9952w
-        val paint2 = Paint(Paint.ANTI_ALIAS_FLAG)
-        paint2.isAntiAlias = true
-        paint2.style = Paint.Style.FILL
-        paint2.setShader(
-            LinearGradient(
-                0.0f, i16.toFloat(), 0.0f, i17.toFloat(), context.getColor(
-                    R.color.hsm_widget_canvas_degree_line_alpha50
-                ), context.getColor(
-                    R.color.hsm_widget_canvas_degree_line_alpha10
-                ), Shader.TileMode.CLAMP
-            )
-        )
+//        val i16 = this.f9951v
+//        val i17 = this.f9952w
+//        val paint2 = Paint(Paint.ANTI_ALIAS_FLAG)
+//        paint2.isAntiAlias = true
+//        paint2.style = Paint.Style.FILL
+//        paint2.setShader(
+//            LinearGradient(
+//                0.0f, i16.toFloat(), 0.0f, i17.toFloat(), context.getColor(
+//                    R.color.hsm_widget_canvas_degree_line_alpha50
+//                ), context.getColor(
+//                    R.color.hsm_widget_canvas_degree_line_alpha10
+//                ), Shader.TileMode.CLAMP
+//            )
+//        )
         val textPaint = this.f9943n
-        var i18 = this.f9937h
-        val i19 = this.f9935f
+        var i18 = this.aboveTimeTextSize
+        val i19 = this.chartBottomPadding
         if (this.mEndTime > this.mStartTime) {
             val i20 = ((((this.mEndTime - this.mStartTime) - 3600000) * this.f9924D) / 86400000).toInt()
             i12 = if (isLayoutRtl) {
@@ -382,7 +378,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                 f9923C + i20
             }
             val m7043d = m7043d(this.mEndTime)
-            val m7049g = m7049g(m7043d)
+            val m7049g = calculateMaxTextWidth(m7043d)
             i13 = if (isLayoutRtl) {
                 (i12 - (f9927G.toInt())) - m7049g
             } else {
@@ -397,18 +393,18 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             if (isLayoutRtl && z15) {
                 i13 = (this.f9921A - m7049g) + dp2px(12)//C5820e.m13959i()
             }
-            if (m7047e()) {
+            if (shouldUseAmPmNotation()) {
                 Logcat.d("BatteryHistoryOnlyChart", "Enter into double line branch.")
-                val c2675c = C2675c(textPaint, i13, (i19 / 2) + this.f9952w, m7043d)
+                val c2675c = TimeLabel(textPaint, i13, (i19 / 2) + this.f9952w, m7043d)
                 this.f9950u = c2675c
-                m7046c(canvas, c2675c, (i18 * 1.5).toFloat(), c2675c.f9964a.toFloat())
+                drawSplitTextOnCanvas(canvas, c2675c, (i18 * 1.5).toFloat(), c2675c.timePosition.toFloat())
             } else {
-                val c2675c2 = C2675c(textPaint, i13, (i19 / 2) + this.f9952w, m7043d)
-                val f25 = c2675c2.f9964a.toFloat()
-                val f26 = c2675c2.f9966c.toFloat()
-                val str3 = c2675c2.f9965b
+                val c2675c2 = TimeLabel(textPaint, i13, (i19 / 2) + this.f9952w, m7043d)
+                val f25 = c2675c2.timePosition.toFloat()
+                val f26 = c2675c2.labelHeight.toFloat()
+                val str3 = c2675c2.label
                 canvas.drawText(str3, f25, f26, textPaint)
-                m7044a(str3)
+                updateContentDescription(str3)
                 this.f9950u = c2675c2
             }
         } else {
@@ -424,7 +420,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
         } else {
             null
         }
-        val i22 = this.f9932c
+        val i22 = this.chartLineWidth
         if (arrayList == null || arrayList3.size - 1 < 0) {
             i4 = i22
             i8 = i18
@@ -432,11 +428,11 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             val c2673a = arrayList3[0]
             val c2673a2 = c2673a
             var f27 = f9922B.toFloat()
-            val f28 = c2673a2.f9956a
+            val f28 = c2673a2.posX
             if (f28 > f27) {
                 f27 = f28
             }
-            val str5 = c2673a2.f9957b
+            val str5 = c2673a2.dateStr
             val measureText = textPaint.measureText(str5)
             val c2675c3 = this.f9950u
             if (c2675c3 != null) {
@@ -452,15 +448,15 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                 }
                 val dimensionPixelSize =
                     resources.getDimensionPixelSize(R.dimen.bar_min_margin) + i22
-                val i24 = c2675c3.f9967d
-                val i25 = c2675c3.f9964a
+                val i24 = c2675c3.labelWidth
+                val i25 = c2675c3.timePosition
                 val i26 = i22
                 z12 = if (f27 >= i24 + i25 + dimensionPixelSize) {
                     true
                 } else {
                     false
                 }
-                z13 = if (f27 + c2673a2.f9958c + dimensionPixelSize <= i25) {
+                z13 = if (f27 + c2673a2.width + dimensionPixelSize <= i25) {
                     true
                 } else {
                     false
@@ -472,10 +468,10 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                     canvas.drawText(
                         str5,
                         f15,
-                        ((c2673a2.f9959d / 2f) + (i19 / 2f) + this.f9952w),
+                        ((c2673a2.height / 2f) + (i19 / 2f) + this.f9952w),
                         textPaint
                     )
-                    m7044a(str5)
+                    updateContentDescription(str5)
                     f16 = if (isLayoutRtl) {
                         f14 + this.f9926F
                     } else {
@@ -502,13 +498,13 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             val arrayList4 = this.f9948s
             arrayList4.clear()
             val m7043d2 = m7043d(this.mStartTime)
-            val m7049g2 = m7049g(m7043d2)
+            val m7049g2 = calculateMaxTextWidth(m7043d2)
             i9 = if (isLayoutRtl) {
                 f9923C - m7049g2
             } else {
                 f9923C
             }
-            arrayList4.add(C2675c(textPaint, i9, (i19 / 2) + this.f9952w, m7043d2))
+            arrayList4.add(TimeLabel(textPaint, i9, (i19 / 2) + this.f9952w, m7043d2))
             if (arrayList3.isEmpty() && arrayList4.isNotEmpty()) {
                 var size2 = arrayList4.size - 1
                 if (size2 < 0) {
@@ -522,16 +518,16 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                         val c2675c6 = this.f9950u
                         if (c2675c6 != null) {
                             val m9620e: Boolean = isLayoutRtl
-                            val i28 = c2675c5.f9964a
-                            val i29 = c2675c6.f9964a
+                            val i28 = c2675c5.timePosition
+                            val i29 = c2675c6.timePosition
                             i11 = if (m9620e) {
                                 i28 - i29
                             } else {
                                 i29 - i28
                             }
                             val f30 = i28.toFloat()
-                            if (i11 >= c2675c5.f9967d + i4 + resources.getDimensionPixelSize(R.dimen.bar_min_margin)) {
-                                m7046c(canvas, c2675c5, (i8 * 1.5).toFloat(), f30)
+                            if (i11 >= c2675c5.labelWidth + i4 + resources.getDimensionPixelSize(R.dimen.bar_min_margin)) {
+                                drawSplitTextOnCanvas(canvas, c2675c5, (i8 * 1.5).toFloat(), f30)
                             }
                         }
                     }
@@ -547,8 +543,8 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                     val c2675c9 = this.f9950u
                     if (c2675c9 != null) {
                         val m9620e2: Boolean = isLayoutRtl
-                        val i30 = c2675c7.f9964a
-                        val i31 = c2675c9.f9964a
+                        val i30 = c2675c7.timePosition
+                        val i31 = c2675c9.timePosition
                         i10 = if (m9620e2) {
                             i30 - i31
                         } else {
@@ -556,19 +552,19 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                         }
                         if (isLayoutRtl) {
                             f12 = i30.toFloat()
-                            f13 = arrayList3[0].f9956a
+                            f13 = arrayList3[0].posX
                         } else {
-                            f12 = arrayList3[0].f9956a
+                            f12 = arrayList3[0].posX
                             f13 = i30.toFloat()
                         }
                         val f31 = f12 - f13
                         val dimensionPixelSize2 =
-                            c2675c7.f9967d + i4 + resources.getDimensionPixelSize(
+                            c2675c7.labelWidth + i4 + resources.getDimensionPixelSize(
                                 R.dimen.bar_min_margin
                             )
-                        val f32 = c2675c7.f9964a.toFloat()
+                        val f32 = c2675c7.timePosition.toFloat()
                         if (i10 >= dimensionPixelSize2 && f31 >= dimensionPixelSize2) {
-                            m7046c(canvas, c2675c7, (i8 * 1.5).toFloat(), f32)
+                            drawSplitTextOnCanvas(canvas, c2675c7, (i8 * 1.5).toFloat(), f32)
                             return
                         }
                         return
@@ -583,16 +579,16 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
     // android.view.View
     public override fun onMeasure(i4: Int, i8: Int) {
         super.onMeasure(i4, i8)
-        var i9 = (this.f9929I + this.f9935f + this.f9936g).toInt()
-        if (m7047e()) {
-            i9 += (this.f9937h * 1.5).toInt()
+        var height = (this.barBubbleTopMargin + this.chartBottomPadding + this.chartHeight).toInt()
+        if (shouldUseAmPmNotation()) {
+            height += (this.aboveTimeTextSize * 1.5).toInt()
         }
-        setMeasuredDimension(MeasureSpec.getSize(i4), i9)
+        setMeasuredDimension(MeasureSpec.getSize(i4), height)
     }
 
     // android.view.View
-    public override fun onSizeChanged(i4: Int, i8: Int, i9: Int, i10: Int) {
-        super.onSizeChanged(i4, i8, i9, i10)
+    public override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
+        super.onSizeChanged(width, height, oldWidth, oldHeight)
         f9947r.clear()
         f9948s.clear()
         val arrayList = this.f9949t
@@ -614,14 +610,14 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
         }
         this.f9934e = m10476a
         val dimension = resources.getDimension(R.dimen.battery_maigin_text_percent) + this.f9928H
-        this.f9951v = this.f9929I
-        this.f9952w = i8 - this.f9935f
-        if (m7047e()) {
-            this.f9952w -= (this.f9937h * 1.5).toInt()
+        this.f9951v = this.barBubbleTopMargin
+        this.f9952w = height - this.chartBottomPadding
+        if (shouldUseAmPmNotation()) {
+            this.f9952w -= (this.aboveTimeTextSize * 1.5).toInt()
         }
         val i11 = this.f9933d
         this.f9953x = i11
-        val i12 = i4 - this.f9934e
+        val i12 = width - this.f9934e
         this.f9954y = i12
         val i13 = (i12 - dimension).toInt()
         this.f9921A = i13
@@ -663,11 +659,11 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
                 }
                 val timeInMillis2 = calendar2.timeInMillis
                 if (timeInMillis < timeInMillis2) {
-                    m7048f(calendar, this.f9923C)
+                    addTimePointToCalendar(calendar, this.f9923C)
                 }
                 calendar[6] = calendar[6] + 1
                 if (calendar.timeInMillis < timeInMillis2) {
-                    m7048f(calendar, this.f9923C)
+                    addTimePointToCalendar(calendar, this.f9923C)
                 }
             }
         }
@@ -677,8 +673,8 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             this.f9921A = (this.f9953x + dimension).toInt()
         }
         val textPaint = this.f9944o
-        arrayList.add(C2674b(textPaint, i15, this.f9951v, i14, 100))
-        arrayList.add(C2674b(textPaint, i15, this.f9951v, i14, 50))
+        arrayList.add(PercentageLabel(textPaint, i15, this.f9951v, i14, 100))
+        arrayList.add(PercentageLabel(textPaint, i15, this.f9951v, i14, 50))
     }
 
     fun setData(value2: ArrayList<LevelAndCharge>) {
@@ -695,7 +691,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
         } else {
             j10 = this.mEndTime
             j11 = value2.size.toLong()
-            j12 = j11 * 1800000L//powerManagerViewModel.f10356g//this.f10356g = 1800000L;
+            j12 = j11 * 1800000L
         }
         this.mStartTime = j10 - j12
         Logcat.d("BatteryHistoryOnlyChart", "f9931b = " + this.mStartTime + ",j10 = " + j10 + ",j12 = " + j12)
@@ -706,7 +702,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = j10
             val formatDateTime =
-                DateUtils.formatDateTime(MainApplication.context, calendar.timeInMillis,  DateUtils.FORMAT_SHOW_TIME)
+                DateUtils.formatDateTime(MainApplication.context, calendar.timeInMillis, DateUtils.FORMAT_SHOW_TIME)
             Logcat.d("BatteryHistoryOnlyChart", "j10:$j10,startTimeString =$formatDateTime")
             return formatDateTime
         }

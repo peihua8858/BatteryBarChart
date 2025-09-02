@@ -96,33 +96,33 @@ class BubbleView1(context: Context, selectedItem: SelectedItem) {
         val f11 = 2f
         this.f22169q = (-m14219b) / f11
         this.f22172t = RectF()
-        val m10476a3: Int = context.dp2px(24)
-        this.f22173u = m10476a3
-        val m11216d: String = TimeUtil.m11216d(selectedItem.state, selectedItem.time)
-        this.f22161i = m11216d
+        val dp24: Int = context.dp2px(24)
+        this.f22173u = dp24
+        val formatTime = TimeUtil.formatBatteryChooseTime(selectedItem.state, selectedItem.time)
+        this.f22161i = formatTime
         if (context.v() || context.r()) {
             paint2.textSize = 76.0f
         }
         val rect = Rect()
-        paint2.getTextBounds(m11216d, 0, m11216d.length, rect)
+        paint2.getTextBounds(formatTime, 0, formatTime.length, rect)
         val width = rect.width().toFloat()
         Logcat.d("BatteryHistoryChartPaintFactory", "width is $width")
         this.f22162j = width
         val rect2 = Rect()
-        paint2.getTextBounds(m11216d, 0, m11216d.length, rect2)
+        paint2.getTextBounds(formatTime, 0, formatTime.length, rect2)
         val height = rect2.height().toFloat()
         Logcat.d("BatteryHistoryChartPaintFactory", "height is $height")
         this.f22163k = height
         this.startX = selectedItem.startX
         this.startY = selectedItem.startY
-        Logcat.d("BubbleView", "text is $m11216d")
+        Logcat.d("BubbleView", "text is $formatTime")
         val f12 = m10476a2.toFloat()
         val f13 = (height / f11) + f12
         this.f22170r = f13
         this.f22171s = f13
         val f14 = (f13 * f11) + width + m10476a
         this.f22164l = f14
-        this.f22173u = max(m10476a3, (f12 + height).toInt())
+        this.f22173u = max(dp24, (f12 + height).toInt())
         Logcat.d("BubbleView", "bubbleWidth is $f14")
     }
 }

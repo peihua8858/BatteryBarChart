@@ -28,11 +28,11 @@ import com.android.hwsystemmanager.multicolor.MultiColorPathRenderer.PointFColor
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.ScreenReaderUtils
 import com.android.hwsystemmanager.utils.TimeUtil
+import com.android.hwsystemmanager.utils.argb
 import com.android.hwsystemmanager.utils.createDashedPaint
+import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dLog
 import com.android.hwsystemmanager.utils.dp2px
-import com.android.hwsystemmanager.utils.getDimension
-import com.android.hwsystemmanager.utils.getDimensionPixelSize
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.isPie
@@ -58,8 +58,8 @@ class MultiColorLineChart @JvmOverloads constructor(
     private val barChartTouchHelper by lazy { BarChartTouchHelper(this) }
     var mIsHalfHour = 0
     var lastIndex: Int = 0
-    private var mWidth: Int = 0
-    private var mHeight: Int = 0
+    private var mWidth: Float = 0f
+    private var mHeight: Float = 0f
     private var mEndTime: Long = 0
     private var mStartTime: Long = 0
     var dataLength: Int = 0
@@ -78,43 +78,109 @@ class MultiColorLineChart @JvmOverloads constructor(
     private var chartStopX: Float = 0f
     private var chartY: Float = 0f
     private var chartStopY: Float = 0f
-    private val mLineWidth = getDimensionPixelSize(R.dimen.battery_history_chart_linewidth)
-    private val mBottomTextPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        this.color = Color.DKGRAY
-        this.textSize = getDimension(R.dimen.battery_history_chart_dateText_size)
-        this.textAlign = Paint.Align.CENTER
-    }
-    private val mPrecentTextPaint: TextPaint = TextPaint(Paint.ANTI_ALIAS_FLAG).apply {
-        this.color = Color.DKGRAY
-        this.textSize = getDimension(R.dimen.battery_history_chart_dateText_size)
-//        this.textAlign = Paint.Align.CENTER
-    }
+    private val mLineWidth: Float
+    private val mBottomTextPaint: TextPaint
+    private val mPrecentTextPaint: TextPaint
     private val mBottomTextWidth: Int
     private var mVerticalGap: Float = 0f
-    val mLeftVerticalLineWidth = dp2px(if (isLandscape) 3f else 2f)
+    val mLeftVerticalLineWidth: Float
 
 
-    // Initialize grid paint
-    private val hDashedLinePaint: Paint = createDashedPaint(
-        getDimension(R.dimen.battery_history_chart_y_line_size_card),
-        R.color.charge_rect_color
-    )
+    private val mHorizontalLinePaint: Paint
+    private val mVerticalLinePaint: Paint
 
 
     private var pathRenderer: MultiColorPathRenderer = MultiColorPathRenderer()
-    private val bottomPadding = getDimensionPixelSize(R.dimen.battery_history_chart_bottom_padding)
-    private val chartHeight = getDimensionPixelSize(R.dimen.battery_chart_height)
+    private val chartBottomPadding: Float
+    private val chartHeight: Int
     private val precentTextWidth: Int
     private val precentTextHeight: Int
-    private val precentTextMargin: Int = getDimensionPixelSize(R.dimen.battery_maigin_text_percent)
-    private val chartAboveTextSize =
-        getDimensionPixelSize(R.dimen.battery_history_chart_aboveTimeText_size)
-    val barBubbleTopMargin = getDimension(R.dimen.margin_bar_top_bubble)
+    private val precentTextMargin: Float
+
+    private val chartAboveTextSize: Float
+
+    @ColorInt
+    private val chartAboveTextColor: Int
+
+    val barBubbleEnable: Boolean
+    val barBubbleTopMargin: Float
+    val barBubbleBottomMargin: Float
+    val barBubbleLeftMargin: Float
+    val barBubbleRightMargin: Float
+    val barBubbleTextSize: Float
+
+    @ColorInt
+    val barBubbleTextColor: Int
+
+    @ColorInt
+    val barBubbleBackground: Int
+    val barBubbleCornerRadius: Float
+
     var mBarWidth: Float = 0f
         private set
     var mSelectIndex: Int = -1
 
+    @ColorInt
+    val chartLineChargeColor: Int
+
+    @ColorInt
+    val chartLineLowBatteryColor: Int
+
+    @ColorInt
+    val chartLineNoChargeColor: Int
+
+    @ColorInt
+    val chartNoSelectedBgColor: Int
+
+    @ColorInt
+    val chartNoSelectedBottomBgColor: Int
+    private val chartVerticalLineVisible: Boolean
+
     init {
+        val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MultiColorLineChart)
+        chartHeight = typedArray.getDimensionPixelSize(R.styleable.MultiColorLineChart_chartHeight, 0)
+        mLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartLineWidth, dp2px(1f))
+
+        chartLineChargeColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineChargeColor, Color.BLACK)
+        chartLineLowBatteryColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineLowBatteryColor, Color.BLACK)
+        chartLineNoChargeColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineNoChargeColor, Color.BLACK)
+        mLeftVerticalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartVerticalLineWidth, 0f)
+        chartAboveTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartAboveTextSize, dp2px(11f))
+        chartAboveTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartAboveTextColor, Color.BLACK)
+
+        chartBottomPadding = typedArray.getDimension(R.styleable.MultiColorLineChart_chartBottomPadding, dp2px(48f))
+        val chartHorizontalLineColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartHorizontalLineColor, Color.GRAY)
+        val chartHorizontalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartHorizontalLineWidth, 0f)
+        chartVerticalLineVisible = typedArray.getBoolean(R.styleable.MultiColorLineChart_chartVerticalLineVisible, true)
+        val chartVerticalLineColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartVerticalLineColor, Color.GRAY)
+        val chartVerticalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartVerticalLineWidth, 0f)
+
+        val rightTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartRightLabelTextColor, Color.BLACK)
+        val rightTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextSize, dp2px(11f))
+        precentTextMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextMargin, dp2px(6f))
+
+        chartNoSelectedBgColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartNoSelectedBgColor, Color.WHITE)
+        chartNoSelectedBottomBgColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartNoSelectedBottomBgColor, Color.WHITE)
+
+
+        barBubbleEnable = typedArray.getBoolean(R.styleable.MultiColorLineChart_barBubbleEnable, true)
+        barBubbleTopMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleTopMargin, 0f)
+        barBubbleBottomMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleBottomMargin, 0f)
+        barBubbleLeftMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleLeftMargin, 0f)
+        barBubbleRightMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleRightMargin, 0f)
+        barBubbleTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleTextSize, dp2px(11f))
+        barBubbleTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_barBubbleTextColor, Color.WHITE)
+        barBubbleBackground = typedArray.getColor(R.styleable.MultiColorLineChart_barBubbleBackground, Color.BLACK)
+        barBubbleCornerRadius = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleCornerRadius, dp2px(5f))
+
+        typedArray.recycle()
+        mBottomTextPaint = createTextPaint(chartAboveTextColor, chartAboveTextSize).apply {
+            this.textAlign = Paint.Align.CENTER
+        }
+        mPrecentTextPaint = createTextPaint(rightTextColor, rightTextSize)
+        mHorizontalLinePaint = createDashedPaint(chartHorizontalLineColor, chartHorizontalLineWidth)
+        mVerticalLinePaint = createDashedPaint(chartVerticalLineColor, chartVerticalLineWidth)
+        onTouchListener.isEnable = barBubbleEnable
         setOnTouchListener(onTouchListener)
         mBottomTextPaint.measureTextSize("12点").apply {
             mBottomTextWidth = this.width()
@@ -126,7 +192,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
 
         pathRenderer = MultiColorPathRenderer()
-        pathRenderer.setStrokeWidth(dp2px(5f)) // 设置线宽
+        pathRenderer.setStrokeWidth(mLineWidth) // 设置线宽
     }
 
     val endIndex: Int
@@ -148,25 +214,26 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     val selectedTimeSpand: Long
         get() {
-            if (m7037d(startIndex, endIndex) != 0) {
+            if (checkBatteryLevelValidity(startIndex, endIndex) != 0) {
                 return HALF_HOUR
             }
             return ONE_HOUR
         }
 
-    fun m7037d(startIndex: Int, endIndex: Int): Int {
+    //m7037d
+    fun checkBatteryLevelValidity(startIndex: Int, endIndex: Int): Int {
         if (startIndex < 0) {
             return 0
         }
-        var z11 = true
         if ((batteryDataList.isNotEmpty()) && startIndex > dataLength - 1) {
             return 0
         }
-        val isOneItem = startIndex == dataLength - 1
+        var isValid = true
+        val isSingleItem = startIndex == dataLength - 1
         if (batteryDataList[startIndex].level < 0 || batteryDataList[endIndex].level != 0) {
-            z11 = false
+            isValid = false
         }
-        if ((!isOneItem || !z11) && startIndex != endIndex) {
+        if ((!isSingleItem || !isValid) && startIndex != endIndex) {
             return 0
         }
         return -1
@@ -210,7 +277,7 @@ class MultiColorLineChart @JvmOverloads constructor(
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
         var height =
-            (this.chartHeight + this.bottomPadding + barBubbleTopMargin + paddingTop + paddingBottom).toInt()
+            (this.chartHeight + this.chartBottomPadding + barBubbleTopMargin + paddingTop + paddingBottom).toInt()
         if (is24HourFormat()) {
             height += (this.chartAboveTextSize * 1.5).toInt()
         }
@@ -219,14 +286,13 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        mWidth = w - paddingStart - paddingEnd
-        mHeight = h - paddingTop - paddingBottom - bottomPadding
+        mWidth = (w - paddingStart - paddingEnd).toFloat()
+        mHeight = h - paddingTop - paddingBottom - chartBottomPadding
         mVerticalGap = mHeight / 5f
         chartX = (paddingStart + mLeftVerticalLineWidth)
-        chartStopX =
-            (mWidth - paddingEnd - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
+        chartStopX = (mWidth - paddingEnd - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
         chartY = barBubbleTopMargin
-        chartStopY = (mHeight).toFloat()
+        chartStopY = mHeight
         m7041j()
         processData()
         val size = dataLength
@@ -280,21 +346,19 @@ class MultiColorLineChart @JvmOverloads constructor(
         var z16 = false
         var z17 = true
         var z14 = false
+        val xOffset = chartX + this.mLeftVerticalLineWidth//2dp 或3dp
+        val y = this.mVerticalGap
+        val barHeight = this.mHeight - y
         for ((index, item) in batteryDataList.withIndex()) {
-            val f10 = chartX + this.mLeftVerticalLineWidth//2dp 或3dp
-            val f11 = this.mBarWidth
-            val f12 = (index * f11) + f10
-            val f13 = this.mVerticalGap
-            val f14 = this.mHeight.toFloat() - f13
-            Logcat.d(TAG, ">>>>mHeight:$mHeight,[ x:$f12,y:$f13]")
-            val preLevel =
-                if (index == 0) {
-                    batteryDataList[1]
-                } else {
-                    batteryDataList[index - 1]
-                }
+            val x = (index * this.mBarWidth) + xOffset
+            Logcat.d(TAG, ">>>>mHeight:$mHeight,[ x:$x,y:$y]")
             val stackBarData =
-                StackBarPointData(f12/*x*/, f13/*y*/, f11/*width*/, f14/*height*/, item, preLevel)
+                StackBarPointData(x, y, this.mBarWidth, barHeight, item)
+                    .setChargeColor(chartLineChargeColor)
+                    .setNoChargeColor(chartLineNoChargeColor)
+                    .setLowBatteryColor(chartLineLowBatteryColor)
+                    .setNoSelectedBgColor(chartNoSelectedBgColor)
+                    .setNoSelectedBottomBgColor(chartNoSelectedBottomBgColor)
             stackBarData.index = index
             val nextCharge = batteryDataList.getOrNull(index + 1)
             Logcat.d(TAG, " area indexHorizontalSufficient = $i8")
@@ -322,7 +386,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         var z15 = true
         processPointF2()
         if (!notSelected()) {
-            onTouchListener.m7035b()
+            onTouchListener.updateBarStates()
         }
         if (!z16) {
             val arrayList = this.stackBarDataList
@@ -348,14 +412,16 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
-        canvas.drawLine(
-            chartX, chartY, chartX,
-            chartStopY, hDashedLinePaint
-        )
-        canvas.drawLine(
-            chartStopX, chartY, chartStopX,
-            chartStopY, hDashedLinePaint
-        )
+        if (chartVerticalLineVisible) {
+            canvas.drawLine(
+                chartX, chartY, chartX,
+                chartStopY, mVerticalLinePaint
+            )
+            canvas.drawLine(
+                chartStopX, chartY, chartStopX,
+                chartStopY, mVerticalLinePaint
+            )
+        }
         drawHorLineAndPrecent(canvas)
         //绘制曲线
         processPointF2()
@@ -363,7 +429,9 @@ class MultiColorLineChart @JvmOverloads constructor(
         stackBarDataList.forEach {
             it.drawBar(canvas)
         }
-        drawBarBubble(canvas)
+        if (barBubbleEnable) {
+            drawBarBubble(canvas)
+        }
         drawBottomLabels(canvas, chartX, mWidth)
     }
 
@@ -385,7 +453,6 @@ class MultiColorLineChart @JvmOverloads constructor(
                 continue
             }
             val barDataState = next.state
-//            val state = next.f18278j
             val lastIndex = mBarLists.size - 2
             var levelAndCharge = next.levelAndCharge
 
@@ -440,7 +507,7 @@ class MultiColorLineChart @JvmOverloads constructor(
                 selectedTime,
                 width.toFloat()
             ).apply {
-                this.state = m7037d(startIndex, endIndex)
+                this.state = checkBatteryLevelValidity(startIndex, endIndex)
             }
             val bubbleView = BubbleView1(context, point)
             if (!ScreenReaderUtils.m10472c()) {
@@ -638,7 +705,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
     }
 
-    private fun drawBottomLabels(canvas: Canvas, x: Float, chartWidth: Int) {
+    private fun drawBottomLabels(canvas: Canvas, x: Float, chartWidth: Float) {
         // Draw chart title
         val textPaint = this.mBottomTextPaint
         val hours = createHours()
@@ -652,7 +719,7 @@ class MultiColorLineChart @JvmOverloads constructor(
             canvas.drawText(
                 item,
                 x + index * gad + if (index == 0) textWidth / 2 else 0,
-                (this.mHeight + bottomPadding).toFloat(),
+                (this.mHeight + chartBottomPadding).toFloat(),
                 textPaint
             )
         }
@@ -690,6 +757,18 @@ class MultiColorLineChart @JvmOverloads constructor(
             calendar3[Calendar.HOUR_OF_DAY] = 12
             Logcat.d("calendar3>>>time0:${TimeUtil.formatTime(calendar3.timeInMillis)}")
 
+            val newCalendar = Calendar.getInstance()
+            newCalendar.timeInMillis = System.currentTimeMillis()
+            newCalendar[Calendar.MILLISECOND] = 0
+            newCalendar[Calendar.SECOND] = 0
+            newCalendar[Calendar.MINUTE] = 0
+            Logcat.d("newCalendar>>>time0:${TimeUtil.formatTime(newCalendar.timeInMillis)}")
+            val newCalendar1 = Calendar.getInstance()
+            newCalendar1.timeInMillis = System.currentTimeMillis() + HALF_HOUR
+            newCalendar1[Calendar.MILLISECOND] = 0
+            newCalendar1[Calendar.SECOND] = 0
+            newCalendar1[Calendar.MINUTE] = 0
+            Logcat.d("newCalendar1>>>time0:${TimeUtil.formatTime(newCalendar1.timeInMillis)}")
             val step = ONE_HOUR * 3L
             val calendar4 = Calendar.getInstance()
             for (i in mStartTime..mEndTime step step) {
@@ -701,8 +780,10 @@ class MultiColorLineChart @JvmOverloads constructor(
                 calendar4[Calendar.MILLISECOND] = 0
                 calendar4[Calendar.SECOND] = 0
                 calendar4[Calendar.MINUTE] = 0
-                Logcat.d("calendar3>>>time1:${TimeUtil.formatTime(i)}")
-                if (calendar4.timeInMillis == calendar3.timeInMillis) {
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatTime(calendar4.timeInMillis)}")
+                if (calendar4.timeInMillis == newCalendar.timeInMillis || calendar4.timeInMillis == newCalendar1.timeInMillis) {
+                    arrayList.add("现在")
+                } else if (calendar4.timeInMillis == calendar3.timeInMillis) {
                     arrayList.add("12点")
                 } else
                     arrayList.add(TimeUtil.formatHourTime(i))
@@ -716,11 +797,11 @@ class MultiColorLineChart @JvmOverloads constructor(
     fun setData(data: List<LevelAndCharge>) {
         this.batteryDataList.clear()
         this.batteryDataList.addAll(data)
-        val currentTimeMillis = System.currentTimeMillis()
         dataLength = data.size
+        this.mIsHalfHour = 1
+//        val currentTimeMillis = System.currentTimeMillis()
 //        val endTime =
 //            if (dataLength <= 0) getHalfTime(currentTimeMillis) + (currentTimeMillis - HALF_HOUR) else data.last().time
-        this.mIsHalfHour = 1
 //        val size: Int = 48 - dataLength
 //        if (dataSize <= 48 && 1 <= size) {
 //            var index = 1
@@ -762,15 +843,15 @@ class MultiColorLineChart @JvmOverloads constructor(
             var selectedTime = selectedTime
             val str = stackBarDataList[startIndex].precentLevel
             val str2 = stackBarDataList[endIndex].precentLevel
-            val m7037d = m7037d(startIndex, endIndex)
-            var j10 = 3600000 + selectedTime
+            val m7037d = checkBatteryLevelValidity(startIndex, endIndex)
+            var j10 = ONE_HOUR + selectedTime
             val calendar = Calendar.getInstance()
             if (m7037d != -1) {
                 if (m7037d == 1) {
-                    selectedTime += 1800000
+                    selectedTime += HALF_HOUR
                 }
             } else {
-                j10 -= 1800000
+                j10 -= HALF_HOUR
             }
             calendar.timeInMillis = selectedTime
             val formatDateTime = DateUtils.formatDateTime(
@@ -898,13 +979,13 @@ class MultiColorLineChart @JvmOverloads constructor(
             this.y = (textHeight / 2f) + ((i8 + i9) - ((value * i9) / 100))
         }
 
-        fun draw(canvas: Canvas, prevY: Float, linewidth: Int): Float {
+        fun draw(canvas: Canvas, prevY: Float, linewidth: Float): Float {
             if (abs(y - prevY) >= textHeight + linewidth) {
                 canvas.drawText(percent, x, y, textPaint)
                 val lineY = y - (textHeight / 2f)
                 val lineStopX =
                     hostView.mWidth - hostView.mLeftVerticalLineWidth - textWidth - hostView.precentTextMargin
-                canvas.drawLine(hostView.chartX, lineY, lineStopX, lineY, hostView.hDashedLinePaint)
+                canvas.drawLine(hostView.chartX, lineY, lineStopX, lineY, hostView.mHorizontalLinePaint)
             }
             return y
         }
@@ -939,7 +1020,6 @@ data class StackBarPointData(
     val width: Float,
     val height: Float,
     val levelAndCharge: LevelAndCharge,
-    val preCharge: LevelAndCharge,
 ) {
     var showBubble: Boolean = false
     var index = -1
@@ -953,18 +1033,21 @@ data class StackBarPointData(
     private var mDrawLineColor: Int = 0
     private val linePaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val barPaint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val noChargeLineColor50: Int
-    private val noChargeLineColor10: Int
-    private val chargeLineColor50: Int
-    private val chargeLineColor10: Int
-    private val noChargeLineNewColor: Int
-    private val chargeLineNewColor: Int
 
-    private val lowBatteryLineColor50: Int
-    private val lowBatteryLineColor10: Int
-    private val lowBatteryLineNewColor: Int
-    private val noSelectedBgColor: Int
-    private val noSelectedBottomBgColor: Int
+    private var noChargeLineNewColor: Int
+    private var noChargeLineColor50: Int
+    private var noChargeLineColor10: Int
+
+    private var chargeLineNewColor: Int
+    private var chargeLineColor50: Int
+    private var chargeLineColor10: Int
+
+    private var lowBatteryLineNewColor: Int
+    private var lowBatteryLineColor50: Int
+    private var lowBatteryLineColor10: Int
+
+    private var noSelectedBgColor: Int
+    private var noSelectedBottomBgColor: Int
 
     init {
         val level = levelAndCharge.level / 100.0
@@ -973,45 +1056,52 @@ data class StackBarPointData(
         barWidth = (2f * width) / 3f
         barOffset = width / 3f
         val context = MainApplication.context
-        noChargeLineColor50 = context.getColor(
-            if (isPie) R.color.battery_no_charge_line_alpha50_card
-            else R.color.battery_no_charge_line_alpha50
-        )
-        noChargeLineColor10 = context.getColor(
-            if (isPie) R.color.battery_no_charge_line_alpha10_card
-            else R.color.battery_no_charge_line_alpha10
-        )
-        chargeLineColor50 = context.getColor(
-            if (isPie) R.color.battery_charge_line_alpha50_card
-            else R.color.battery_charge_line_alpha50
-        )
-        chargeLineColor10 = context.getColor(
-            if (isPie) R.color.battery_charge_line_alpha10_card
-            else R.color.battery_charge_line_alpha10
-        )
-        noChargeLineNewColor = context.getColor(
-            if (isPie) R.color.battery_no_charge_line_new_card
-            else R.color.battery_no_charge_line_new
-        )
-        chargeLineNewColor = context.getColor(
-            if (isPie) R.color.battery_charge_line_new_card
-            else R.color.battery_charge_line_new
-        )
-        lowBatteryLineColor10 = context.getColor(
-            if (isPie) R.color.battery_low_battery_line_alpha10_card
-            else R.color.battery_low_battery_line_alpha10
-        )
-        lowBatteryLineColor50 = context.getColor(
-            if (isPie) R.color.battery_low_battery_line_alpha50_card
-            else R.color.battery_low_battery_line_alpha50
-        )
-        lowBatteryLineNewColor = context.getColor(
-            if (isPie) R.color.battery_low_battery_line_new_card
-            else R.color.battery_low_battery_line_new
-        )
+        noChargeLineColor50 = context.getColor(if (isPie) R.color.battery_no_charge_line_alpha50_card else R.color.battery_no_charge_line_alpha50)
+        noChargeLineColor10 = context.getColor(if (isPie) R.color.battery_no_charge_line_alpha10_card else R.color.battery_no_charge_line_alpha10)
+        noChargeLineNewColor = context.getColor(if (isPie) R.color.battery_no_charge_line_new_card else R.color.battery_no_charge_line_new)
+
+        chargeLineColor50 = context.getColor(if (isPie) R.color.battery_charge_line_alpha50_card else R.color.battery_charge_line_alpha50)
+        chargeLineColor10 = context.getColor(if (isPie) R.color.battery_charge_line_alpha10_card else R.color.battery_charge_line_alpha10)
+        chargeLineNewColor = context.getColor(if (isPie) R.color.battery_charge_line_new_card else R.color.battery_charge_line_new)
+        lowBatteryLineColor10 =
+            context.getColor(if (isPie) R.color.battery_low_battery_line_alpha10_card else R.color.battery_low_battery_line_alpha10)
+        lowBatteryLineColor50 =
+            context.getColor(if (isPie) R.color.battery_low_battery_line_alpha50_card else R.color.battery_low_battery_line_alpha50)
+        lowBatteryLineNewColor = context.getColor(if (isPie) R.color.battery_low_battery_line_new_card else R.color.battery_low_battery_line_new)
         noSelectedBgColor = context.getColor(R.color.battery_not_select_bg)
         noSelectedBottomBgColor = context.getColor(R.color.battery_not_select_bg_bottom_card)
         changePainColor()
+    }
+
+    fun setChargeColor(color: Int): StackBarPointData {
+        this.chargeLineNewColor = color
+        this.chargeLineColor50 = color.argb(0.3f)
+        this.chargeLineColor10 = color.argb(0f)
+        return this
+    }
+
+    fun setNoChargeColor(color: Int): StackBarPointData {
+        this.noChargeLineNewColor = color
+        this.noChargeLineColor50 = color.argb(0.3f)
+        this.noChargeLineColor10 = color.argb(0f)
+        return this
+    }
+
+    fun setLowBatteryColor(color: Int): StackBarPointData {
+        this.lowBatteryLineNewColor = color
+        this.lowBatteryLineColor50 = color.argb(0.3f)
+        this.lowBatteryLineColor10 = color.argb(0f)
+        return this
+    }
+
+    fun setNoSelectedBgColor(color: Int): StackBarPointData {
+        this.noSelectedBgColor = color
+        return this
+    }
+
+    fun setNoSelectedBottomBgColor(color: Int): StackBarPointData {
+        this.noSelectedBottomBgColor = color
+        return this
     }
 
     fun calculatePoint(pointFs: MutableList<PointF>, preLevel: Int, type: Int, index: Int) {
@@ -1179,27 +1269,28 @@ data class Point(val startX: Float, val startY: Float, val stopX: Float, val sto
 
 class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouchListener {
     private var state: Int = 0
+    var isEnable: Boolean = true
 
     @SuppressLint("ClickableViewAccessibility")
     override fun onTouch(v: View, event: MotionEvent): Boolean {
+        if (!isEnable) {
+            return false
+        }
         val action = event.action
-        val x = event.x
-        val y = event.y
         var result = false
         val pointF = hostView.mSelectPointF
         when (action) {
             MotionEvent.ACTION_DOWN -> {
-//                hostView.f9915u = hostView.mSelectIndex
                 state = 0
                 pointF.set(event.x, event.y)
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (!m7038e(event.x)) {
+                if (!isWithinBarRange(event.x)) {
                     return false
                 }
                 if (state == 1 || state == 2) {
-                    m7042k(event.x)
+                    handleTouchEvent(event.x)
                 } else {
                     val yDiff = abs(event.y - pointF.y)
                     val xDiff = abs(event.x - pointF.x)
@@ -1207,7 +1298,7 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                         state = 2
                     } else if (abs(event.x - pointF.x) > 60f) {
                         state = 1
-                        m7042k(event.x)
+                        handleTouchEvent(event.x)
                     }
                 }
             }
@@ -1216,25 +1307,25 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                 if (event.y < hostView.barBubbleTopMargin) {
                     return false
                 }
-                if (m7038e(event.x)) {
+                if (isWithinBarRange(event.x)) {
                     val index = (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
                     if (hostView.mSelectIndex == index) {
                         Logcat.d(MultiColorLineChart.TAG, "reset bar status.")
-                        m7040i()
+                        resetSelectionAndUpdateBars()
                         result = true
                     }
                 }
                 if (result) {
                     return true
                 }
-                if (m7038e(event.x)) {
+                if (isWithinBarRange(event.x)) {
                     val index = (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
                     if (index != hostView.mSelectIndex) {
-                        if (m7038e(event.x)) {
+                        if (isWithinBarRange(event.x)) {
                             val selectedIndex =
                                 (getSelectedBarIndex(event.x) + hostView.mIsHalfHour) / 2
                             hostView.setSelectIndex(selectedIndex)
-                            m7035b()
+                            updateBarStates()
                             hostView.invalidate()
                         }
                     }
@@ -1260,50 +1351,46 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
         return true
     }
 
-    fun m7038e(x: Float): Boolean {
+    fun isWithinBarRange(x: Float): Boolean {
         val size = hostView.dataLength
-        val result = if (size > 1 && size % 2 != hostView.mIsHalfHour) {
-            1
-        } else {
-            0
-        }
-        return !(x >= (hostView.mBarWidth * (size + result)) + hostView.mLeftVerticalLineWidth || x <= hostView.mLeftVerticalLineWidth)
+        val adjustment = if (size > 1 && size % 2 != hostView.mIsHalfHour) 1 else 0
+        return !(x >= (hostView.mBarWidth * (size + adjustment)) + hostView.mLeftVerticalLineWidth || x <= hostView.mLeftVerticalLineWidth)
     }
 
-    fun m7042k(x: Float) {
-        if ((getSelectedBarIndex(x) + hostView.mIsHalfHour) / 2 != hostView.mSelectIndex && m7038e(x)) {
+    fun handleTouchEvent(x: Float) {
+        if ((getSelectedBarIndex(x) + hostView.mIsHalfHour) / 2 != hostView.mSelectIndex && isWithinBarRange(x)) {
             hostView.setSelectIndex((getSelectedBarIndex(x) + hostView.mIsHalfHour) / 2)
-            m7035b()
+            updateBarStates()
             hostView.invalidate()
         }
-        val aVar = hostView.onSlideListener
-        if (aVar != null) {
-            val z10 = state == 2
+        val listener = hostView.onSlideListener
+        if (listener != null) {
             hostView.parent.requestDisallowInterceptTouchEvent(true)
-            aVar.onSlide(z10)
+            listener.onSlide(state == 2)
         }
     }
 
     private val mNumLists = hostView.batteryDataList
     private val mBarLists = hostView.stackBarDataList
     private fun getSelectedBarIndex(x: Float): Int {
-        var i8 = ((x - hostView.mLeftVerticalLineWidth) / hostView.mBarWidth).toInt()
-        Logcat.d(MultiColorLineChart.TAG, "getSelectedBarIndex $i8,\n" +
-                "x:$x,hostView.mLeftVerticalLineWidth:${hostView.mLeftVerticalLineWidth}\n" +
-                ",hostView.mBarWidth:${hostView.mBarWidth},\n" +
-                "mNumLists.size:${mNumLists.size},mBarLists.size:${mBarLists.size},\n" +
-                "hostView.dataLength:${hostView.dataLength}"
+        var index = ((x - hostView.mLeftVerticalLineWidth) / hostView.mBarWidth).toInt()
+        Logcat.d(
+            MultiColorLineChart.TAG, "getSelectedBarIndex $index,\n" +
+                    "x:$x,hostView.mLeftVerticalLineWidth:${hostView.mLeftVerticalLineWidth}\n" +
+                    ",hostView.mBarWidth:${hostView.mBarWidth},\n" +
+                    "mNumLists.size:${mNumLists.size},mBarLists.size:${mBarLists.size},\n" +
+                    "hostView.dataLength:${hostView.dataLength}"
         )
-        if (i8 < 0 || ((mNumLists.isNotEmpty()) && i8 > mNumLists.size)) {
-            i8 = 0
+        if (index < 0 || ((mNumLists.isNotEmpty()) && index > mNumLists.size)) {
+            index = 0
         }
-        Logcat.d(MultiColorLineChart.TAG, "getSelectedBarIndex $i8")
-        return i8
+        Logcat.d(MultiColorLineChart.TAG, "getSelectedBarIndex $index")
+        return index
     }
 
-    fun m7040i() {
+    //m7040i
+    fun resetSelectionAndUpdateBars() {
         hostView.mSelectIndex = -1
-//        f9913s.clear()
         if (mBarLists.size <= 48) {
             for (i4 in 0..<mBarLists.size) {
                 mBarLists[i4].state = 1
@@ -1313,7 +1400,8 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
         hostView.invalidate()
     }
 
-    fun m7035b() {
+    //m7035b
+    fun updateBarStates() {
         for (index in 0..<mBarLists.size) {
             val barData = mBarLists[index]
             if (hostView.mSelectIndex == (hostView.mIsHalfHour + index) / 2) {
@@ -1323,8 +1411,8 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                     if (hostView.mIsHalfHour == 1 && (index == 0 || index == 47)) {
                         barData.f18278j = -1
                     } else {
-                        val i8 = index - 1
-                        val prevBarData = mBarLists[i8]
+                        val prevIndex = index - 1
+                        val prevBarData = mBarLists[prevIndex]
                         Logcat.d(
                             MultiColorLineChart.TAG,
                             prevBarData.levelAndCharge.level.toString() + " " + barData.levelAndCharge.level

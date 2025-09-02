@@ -96,7 +96,7 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         this.f22172t = RectF()
         val m10476a3: Int = context.dp2px(24)
         this.f22173u = m10476a3
-        val m11216d: String = TimeUtil.m11216d(selectedItem.state, selectedItem.time)
+        val m11216d: String = TimeUtil.formatBatteryChooseTime(selectedItem.state, selectedItem.time)
         this.mText = m11216d
         paint2.textSize = context.dp2px(14f)
         if (context.v() || context.r()) {

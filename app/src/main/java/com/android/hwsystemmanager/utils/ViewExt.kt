@@ -179,7 +179,7 @@ fun View.getDimensionPixelSize(@DimenRes id: Int): Int {
     return resources.getDimensionPixelSize(id)
 }
 
-fun View.getColor(@ColorRes id: Int): Int {
+fun View.parseColorAttribute(@ColorRes id: Int): Int {
     return context.getColor(id)
 }
 

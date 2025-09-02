@@ -1,5 +1,6 @@
 package com.android.hwsystemmanager.utils
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
@@ -12,22 +13,23 @@ val Context.isLandscape: Boolean
 
 fun Context.parseAttribute(@AttrRes attrRes: Int): Int {
     val typedValue = TypedValue()
-    val theme = theme
-    theme.resolveAttribute(attrRes, typedValue, true)
+    val result = theme.resolveAttribute(attrRes, typedValue, true)
     val resourceId = typedValue.resourceId
-    if (resourceId != 0) {
+    if (resourceId != 0 && result) {
         return resourceId
     }
     Logcat.d("ContextExt", "resource get fail, resId is $attrRes")
     return 0
 }
 
-fun Context.getColor(resId: Int, z10: Boolean): Int {
+@SuppressLint("ResourceType")
+fun Context.parseColorAttribute(@AttrRes resId: Int, z10: Boolean): Int {
     val resourceId = parseAttribute(resId)
     if (resourceId == 0) {
         Logcat.d("ContextExt", "resource get fail, resId is $resId")
         return try {
             getColor(resId)
+//            android.graphics.Color.BLUE
         } catch (e: Exception) {
             0
         }

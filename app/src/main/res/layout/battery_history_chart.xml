@@ -153,9 +153,33 @@
             <com.android.hwsystemmanager.multicolor.MultiColorLineChart
                 android:id="@+id/battery_line_chart"
                 android:layout_width="match_parent"
-                android:paddingBottom="48dp"
+                android:layout_height="wrap_content"
                 android:paddingStart="16dp"
-                android:layout_height="wrap_content" />
+                android:paddingBottom="48dp"
+                app:chartHeight="@dimen/battery_chart_height"
+                app:chartLineWidth="@dimen/battery_history_chart_linewidth"
+                app:chartAboveTextColor="?android:attr/textColorSecondary"
+                app:chartVerticalLineColor="@color/charge_rect_color"
+                app:chartVerticalLineWidth="@dimen/battery_history_chart_x_line_size_card"
+                app:chartHorizontalLineColor="@color/charge_rect_color"
+                app:chartHorizontalLineWidth="@dimen/battery_history_chart_y_line_size_card"
+                app:chartAboveTextSize="@dimen/battery_history_chart_aboveTimeText_size"
+                app:chartLineChargeColor="@color/battery_charge_line_new_card"
+                app:chartLineLowBatteryColor="@color/battery_low_battery_line_new_card"
+                app:chartLineNoChargeColor="@color/battery_no_charge_line_new_card"
+                app:chartNoSelectedBgColor="@color/battery_not_select_bg"
+                app:chartNoSelectedBottomBgColor="@color/battery_not_select_bg_bottom_card"
+                app:chartBottomPadding="@dimen/battery_history_chart_bottom_padding"
+                app:barBubbleEnable="false"
+                app:barBubbleBackground="@color/battery_bubble_bg"
+                app:barBubbleTopMargin="@dimen/margin_bar_top_bubble"
+                app:barBubbleTextSize="@dimen/bettary_charging_textview_size"
+                app:barBubbleTextColor="@color/white"
+                app:barBubbleCornerRadius="@dimen/cardview_default_radius"
+                app:chartRightLabelTextSize="@dimen/battery_history_chart_aboveTimeText_size"
+                app:chartRightLabelTextColor="?android:attr/textColorSecondary"
+                app:chartRightLabelTextMargin="@dimen/battery_maigin_text_percent"
+                />
         </LinearLayout>
     </LinearLayout>
 </com.android.hwsystemmanager.widgets.BatteryScrollView>
