@@ -10,25 +10,30 @@ import android.view.View
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import com.android.hwsystemmanager.R
+import kotlin.math.roundToInt
 
 fun TextPaint.measureTextSize(str: String): Rect {
     val rect = Rect()
+    val textWidth = measureText(str)
     getTextBounds(str, 0, str.length, rect)
-    Logcat.d("TextPainExt", "width is ${rect.width()}, height is ${rect.height()}")
+    rect.right = textWidth.roundToInt()
+    Logcat.d("TextPainExt", "str:$str>>>width is ${rect.width()}, height is ${rect.height()},rect:$rect")
     return rect
 }
 
 fun Paint.measureTextSize(str: String): Rect {
     val rect = Rect()
+    val textWidth = measureText(str)
     getTextBounds(str, 0, str.length, rect)
-    Logcat.d("TextPainExt", "width is ${rect.width()}, height is ${rect.height()}")
+    rect.right = textWidth.roundToInt()
+    Logcat.d("TextPainExt", "str:$str>>>width is ${rect.width()}, height is ${rect.height()}")
     return rect
 }
 
 
 fun Context.createPaint(textSize: Float, @ColorRes colorId: Int): TextPaint {
     val textPaint = TextPaint(Paint.ANTI_ALIAS_FLAG)
-    textPaint.color = parseColorAttribute(colorId, false)
+    textPaint.color = getColor(colorId)
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     return textPaint
@@ -49,7 +54,7 @@ fun Context.createDashedPaint(
     ),
 ): Paint {
     val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    paint.color = parseColorAttribute(colorId, false)
+    paint.color = getColor(colorId)
     paint.style = Paint.Style.STROKE
     paint.strokeWidth = strokeWidth
     paint.setPathEffect(dashPathEffect)
@@ -106,9 +111,7 @@ fun View.createTextPaint(textSize: Float, @ColorRes colorId: Int): TextPaint {
 }
 
 fun Context.createTextPaint(textSize: Float): TextPaint {
-    return createTextPaint(
-        parseColorAttribute(android.R.attr.textColorSecondary, false)
-        , textSize)
+    return createTextPaint(parseColorAttribute(android.R.attr.textColorSecondary, false), textSize)
 }
 
 fun View.createTextPaint(textSize: Float): TextPaint {

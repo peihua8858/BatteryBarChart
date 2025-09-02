@@ -144,7 +144,6 @@ class MultiColorLineChart @JvmOverloads constructor(
         chartLineChargeColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineChargeColor, Color.BLACK)
         chartLineLowBatteryColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineLowBatteryColor, Color.BLACK)
         chartLineNoChargeColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineNoChargeColor, Color.BLACK)
-        mLeftVerticalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartVerticalLineWidth, 0f)
         chartAboveTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartAboveTextSize, dp2px(11f))
         chartAboveTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartAboveTextColor, Color.BLACK)
 
@@ -154,6 +153,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         chartVerticalLineVisible = typedArray.getBoolean(R.styleable.MultiColorLineChart_chartVerticalLineVisible, true)
         val chartVerticalLineColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartVerticalLineColor, Color.GRAY)
         val chartVerticalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartVerticalLineWidth, 0f)
+        mLeftVerticalLineWidth = if(chartVerticalLineVisible) chartVerticalLineWidth else 0f
 
         val rightTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartRightLabelTextColor, Color.BLACK)
         val rightTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextSize, dp2px(11f))
@@ -290,10 +290,10 @@ class MultiColorLineChart @JvmOverloads constructor(
         mHeight = h - paddingTop - paddingBottom - chartBottomPadding
         mVerticalGap = mHeight / 5f
         chartX = (paddingStart + mLeftVerticalLineWidth)
-        chartStopX = (mWidth - paddingEnd - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
+        chartStopX = (mWidth - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
         chartY = barBubbleTopMargin
         chartStopY = mHeight
-        m7041j()
+        calculateBarDimensions()
         processData()
         val size = dataLength
         if (size != 0 && stackBarDataList.size != 0) {
@@ -330,7 +330,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 0))
     }
 
-    fun m7041j() {
+    fun calculateBarDimensions() {
         Logcat.d(TAG, "bar isLand $isLandscape")
         val f10 = ((this.chartStopX - chartX)) / 48f
         this.mBarWidth = f10
