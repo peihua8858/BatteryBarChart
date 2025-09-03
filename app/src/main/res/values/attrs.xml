@@ -14,6 +14,8 @@
         <attr name="chartHeight" format="dimension" />
         <!--    曲线图的线条宽度    -->
         <attr name="chartLineWidth" format="dimension" />
+        <!--    曲线图的线条间距  -->
+        <attr name="chartLineMargin" format="dimension" />
         <!--    曲线图的线条充电颜色    -->
         <attr name="chartLineChargeColor" format="color" />
         <!--    曲线图的线条低电量颜色    -->
@@ -39,7 +41,6 @@
         <attr name="chartRightLabelTextMargin" format="dimension" />
         <!--    气泡属性    -->
         <attr name="barBubbleEnable" format="boolean" />
-        <attr name="barBubbleTopMargin" format="dimension" />
         <attr name="barBubbleBottomMargin" format="dimension" />
         <attr name="barBubbleLeftMargin" format="dimension" />
         <attr name="barBubbleRightMargin" format="dimension" />

@@ -8,6 +8,7 @@ import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.PointF
+import android.graphics.Rect
 import android.graphics.Shader
 import android.text.BidiFormatter
 import android.text.TextPaint
@@ -39,11 +40,13 @@ import com.android.hwsystemmanager.utils.isPie
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.parseInt
 import com.android.hwsystemmanager.widgets.BubbleView1
+import com.fz.common.view.utils.dip2px
 import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.min
+import kotlin.math.roundToInt
 
 class MultiColorLineChart @JvmOverloads constructor(
     context: Context,
@@ -82,8 +85,11 @@ class MultiColorLineChart @JvmOverloads constructor(
     private val mBottomTextPaint: TextPaint
     private val mPrecentTextPaint: TextPaint
     private val mBottomTextWidth: Int
-    private var mVerticalGap: Float = 0f
+    private val mBottomTextHeight: Int
+    var mVerticalGap: Float = 0f
+        private set
     val mLeftVerticalLineWidth: Float
+    private val xOffset: Float = if (isLandscape) dp2px(3f) else dp2px(2f)
 
 
     private val mHorizontalLinePaint: Paint
@@ -92,7 +98,7 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     private var pathRenderer: MultiColorPathRenderer = MultiColorPathRenderer()
     private val chartBottomPadding: Float
-    private val chartHeight: Int
+    private val chartHeight: Float
     private val precentTextWidth: Int
     private val precentTextHeight: Int
     private val precentTextMargin: Float
@@ -103,7 +109,6 @@ class MultiColorLineChart @JvmOverloads constructor(
     private val chartAboveTextColor: Int
 
     val barBubbleEnable: Boolean
-    val barBubbleTopMargin: Float
     val barBubbleBottomMargin: Float
     val barBubbleLeftMargin: Float
     val barBubbleRightMargin: Float
@@ -138,7 +143,7 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     init {
         val typedArray = context.obtainStyledAttributes(attrs, R.styleable.MultiColorLineChart)
-        chartHeight = typedArray.getDimensionPixelSize(R.styleable.MultiColorLineChart_chartHeight, 0)
+        chartHeight = typedArray.getDimension(R.styleable.MultiColorLineChart_chartHeight, 0f)
         mLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartLineWidth, dp2px(1f))
 
         chartLineChargeColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartLineChargeColor, Color.BLACK)
@@ -147,43 +152,42 @@ class MultiColorLineChart @JvmOverloads constructor(
         chartAboveTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartAboveTextSize, dp2px(11f))
         chartAboveTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartAboveTextColor, Color.BLACK)
 
-        chartBottomPadding = typedArray.getDimension(R.styleable.MultiColorLineChart_chartBottomPadding, dp2px(48f))
+        mVerticalGap = typedArray.getDimension(R.styleable.MultiColorLineChart_chartLineMargin, 0f)
+        chartBottomPadding = typedArray.getDimension(R.styleable.MultiColorLineChart_chartBottomPadding, 0f)
         val chartHorizontalLineColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartHorizontalLineColor, Color.GRAY)
         val chartHorizontalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartHorizontalLineWidth, 0f)
         chartVerticalLineVisible = typedArray.getBoolean(R.styleable.MultiColorLineChart_chartVerticalLineVisible, true)
         val chartVerticalLineColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartVerticalLineColor, Color.GRAY)
         val chartVerticalLineWidth = typedArray.getDimension(R.styleable.MultiColorLineChart_chartVerticalLineWidth, 0f)
-        mLeftVerticalLineWidth = if(chartVerticalLineVisible) chartVerticalLineWidth else 0f
+        mLeftVerticalLineWidth = if (chartVerticalLineVisible) chartVerticalLineWidth else 0f
 
         val rightTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartRightLabelTextColor, Color.BLACK)
         val rightTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextSize, dp2px(11f))
-        precentTextMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextMargin, dp2px(6f))
+        precentTextMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_chartRightLabelTextMargin, 0f)
 
         chartNoSelectedBgColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartNoSelectedBgColor, Color.WHITE)
         chartNoSelectedBottomBgColor = typedArray.getColor(R.styleable.MultiColorLineChart_chartNoSelectedBottomBgColor, Color.WHITE)
 
 
         barBubbleEnable = typedArray.getBoolean(R.styleable.MultiColorLineChart_barBubbleEnable, true)
-        barBubbleTopMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleTopMargin, 0f)
         barBubbleBottomMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleBottomMargin, 0f)
         barBubbleLeftMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleLeftMargin, 0f)
         barBubbleRightMargin = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleRightMargin, 0f)
         barBubbleTextSize = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleTextSize, dp2px(11f))
         barBubbleTextColor = typedArray.getColor(R.styleable.MultiColorLineChart_barBubbleTextColor, Color.WHITE)
         barBubbleBackground = typedArray.getColor(R.styleable.MultiColorLineChart_barBubbleBackground, Color.BLACK)
-        barBubbleCornerRadius = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleCornerRadius, dp2px(5f))
+        barBubbleCornerRadius = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleCornerRadius, 0f)
 
         typedArray.recycle()
-        mBottomTextPaint = createTextPaint(chartAboveTextColor, chartAboveTextSize).apply {
-            this.textAlign = Paint.Align.CENTER
-        }
+        mBottomTextPaint = createTextPaint(chartAboveTextColor, chartAboveTextSize)
         mPrecentTextPaint = createTextPaint(rightTextColor, rightTextSize)
         mHorizontalLinePaint = createDashedPaint(chartHorizontalLineColor, chartHorizontalLineWidth)
         mVerticalLinePaint = createDashedPaint(chartVerticalLineColor, chartVerticalLineWidth)
         onTouchListener.isEnable = barBubbleEnable
         setOnTouchListener(onTouchListener)
-        mBottomTextPaint.measureTextSize("12点").apply {
+        mBottomTextPaint.measureTextSize("现在").apply {
             mBottomTextWidth = this.width()
+            mBottomTextHeight = this.height()
         }
         val precentFormat = NumberFormat.getPercentInstance().format(100 / 100.0)
         mPrecentTextPaint.measureTextSize(precentFormat).apply {
@@ -276,23 +280,28 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        var height =
-            (this.chartHeight + this.chartBottomPadding + barBubbleTopMargin + paddingTop + paddingBottom).toInt()
+        var height = (paddingBottom + paddingTop + chartBottomPadding + mVerticalGap + chartHeight + mBottomTextHeight).roundToInt()
         if (is24HourFormat()) {
             height += (this.chartAboveTextSize * 1.5).toInt()
         }
+        Logcat.d(
+            TAG, "onMeasure height:$height, mHeight:$mHeight,chartHeight:$chartHeight, mBottomTextHeight:$mBottomTextHeight," +
+                    "\nchartBottomPadding:$chartBottomPadding,paddingTop:$paddingTop,paddingBottom:$paddingBottom"
+        )
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height)
     }
 
+    var chartWidth: Float = 0f
+    private val timeLabels = mutableListOf<TimeLabel>()
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        mWidth = (w - paddingStart - paddingEnd).toFloat()
-        mHeight = h - paddingTop - paddingBottom - chartBottomPadding
-        mVerticalGap = mHeight / 5f
+        mWidth = w.toFloat()
+        mHeight = h.toFloat() - chartBottomPadding - paddingBottom - paddingTop - mBottomTextHeight
         chartX = (paddingStart + mLeftVerticalLineWidth)
-        chartStopX = (mWidth - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
-        chartY = barBubbleTopMargin
+        chartStopX = (mWidth - paddingEnd - precentTextWidth - precentTextMargin - mLeftVerticalLineWidth)
+        chartY = mVerticalGap + paddingTop.toFloat()
         chartStopY = mHeight
+        chartWidth = (chartStopX - chartX)
         calculateBarDimensions()
         processData()
         val size = dataLength
@@ -321,13 +330,16 @@ class MultiColorLineChart @JvmOverloads constructor(
             contentDescription = format2
         }
         //右侧百分比坐标
-        val i14 = this.mHeight - mVerticalGap
-        val i15 = if (isLayoutRtl) mLeftVerticalLineWidth else mWidth - mLeftVerticalLineWidth
-        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 100))
-        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 75))
-        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 50))
-        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 25))
-        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 0))
+        val y = this.mHeight - mVerticalGap
+        val x = if (isLayoutRtl) mLeftVerticalLineWidth else mWidth - mLeftVerticalLineWidth
+        mPercentCoorList.add(PercentCoordinate(this, x, this.mVerticalGap, y, 100))
+//        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 75))
+        mPercentCoorList.add(PercentCoordinate(this, x, this.mVerticalGap, y, 50))
+//        mPercentCoorList.add(PercentCoordinate(this, i15, this.mVerticalGap, i14, 25))
+        mPercentCoorList.add(PercentCoordinate(this, x, this.mVerticalGap, y, 0))
+        val timeLabels = createHours2(chartX, mHeight + chartBottomPadding)
+        this.timeLabels.clear()
+        this.timeLabels.addAll(timeLabels)
     }
 
     fun calculateBarDimensions() {
@@ -346,12 +358,16 @@ class MultiColorLineChart @JvmOverloads constructor(
         var z16 = false
         var z17 = true
         var z14 = false
-        val xOffset = chartX + this.mLeftVerticalLineWidth//2dp 或3dp
+        val xOffset = chartX + xOffset//2dp 或3dp
         val y = this.mVerticalGap
         val barHeight = this.mHeight - y
         for ((index, item) in batteryDataList.withIndex()) {
             val x = (index * this.mBarWidth) + xOffset
-            Logcat.d(TAG, ">>>>mHeight:$mHeight,[ x:$x,y:$y]")
+            Logcat.d(
+                TAG, "processData>>>>mHeight:$mHeight，mBarWidth:$mBarWidth,index:$index,chartX:$chartX,\n" +
+                        "chartStopX:$chartStopX,mLeftVerticalLineWidth:$mLeftVerticalLineWidth,[ x:$x,y:$y]\n" +
+                        "precentTextMargin:$precentTextMargin"
+            )
             val stackBarData =
                 StackBarPointData(x, y, this.mBarWidth, barHeight, item)
                     .setChargeColor(chartLineChargeColor)
@@ -408,19 +424,14 @@ class MultiColorLineChart @JvmOverloads constructor(
             item.calculatePointF(preLevel, pointFColors)
             pathRenderer.setData(pointFColors)
         }
+        dLog { "processPointF2>>pointFColors:${pointFColors.size},lastItem:${pointFColors.last()},chartStopX:$chartStopX" }
     }
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
         if (chartVerticalLineVisible) {
-            canvas.drawLine(
-                chartX, chartY, chartX,
-                chartStopY, mVerticalLinePaint
-            )
-            canvas.drawLine(
-                chartStopX, chartY, chartStopX,
-                chartStopY, mVerticalLinePaint
-            )
+            canvas.drawLine(chartX, chartY, chartX, chartStopY, mVerticalLinePaint)
+            canvas.drawLine(chartStopX, chartY, chartStopX, chartStopY, mVerticalLinePaint)
         }
         drawHorLineAndPrecent(canvas)
         //绘制曲线
@@ -432,7 +443,9 @@ class MultiColorLineChart @JvmOverloads constructor(
         if (barBubbleEnable) {
             drawBarBubble(canvas)
         }
-        drawBottomLabels(canvas, chartX, mWidth)
+        timeLabels.forEach {
+            it.drawTime(canvas)
+        }
     }
 
     private fun drawBarBubble(canvas: Canvas) {
@@ -465,10 +478,10 @@ class MultiColorLineChart @JvmOverloads constructor(
             val y2 = next.y
             val startX = next.x
             val startY =
-                (((chartHeight - barBubbleTopMargin) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
+                (((mHeight - mVerticalGap) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
             Logcat.d(
                 "BubbleView", "BubbleView>>startX:$startX,startY:$startY,y2:$y2" +
-                        ",chartHeight:${chartHeight},barBubbleTopMargin:${barBubbleTopMargin}," +
+                        ",chartHeight:${chartHeight},mVerticalGap:${mVerticalGap}," +
                         "levelAndCharge.level:${levelAndCharge.level}"
             )
             var m10476a = 0f
@@ -505,7 +518,7 @@ class MultiColorLineChart @JvmOverloads constructor(
                 bubbleStartX,
                 bubbleStartY,
                 selectedTime,
-                width.toFloat()
+                mWidth
             ).apply {
                 this.state = checkBatteryLevelValidity(startIndex, endIndex)
             }
@@ -705,7 +718,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
     }
 
-    private fun drawBottomLabels(canvas: Canvas, x: Float, chartWidth: Float) {
+    private fun drawBottomLabels(canvas: Canvas, x: Float, y: Float) {
         // Draw chart title
         val textPaint = this.mBottomTextPaint
         val hours = createHours()
@@ -713,16 +726,78 @@ class MultiColorLineChart @JvmOverloads constructor(
         for ((index, item) in hours.withIndex()) {
             dLog { "x:$x,index:$index,gad:$gad,chartStopX:$chartStopX" }
             var textWidth: Int
-            mBottomTextPaint.measureTextSize(item).apply {
+            textPaint.measureTextSize(item).apply {
                 textWidth = this.width()
             }
+            val halfTextWidth = textWidth / 2f
             canvas.drawText(
                 item,
-                x + index * gad + if (index == 0) textWidth / 2 else 0,
-                (this.mHeight + chartBottomPadding).toFloat(),
+                x + index * gad + if (index == 0) halfTextWidth else if (index == hours.size - 1) -halfTextWidth else 0f,
+                (y + chartBottomPadding),
                 textPaint
             )
         }
+    }
+
+    private fun createHours2(x: Float, y: Float): ArrayList<TimeLabel> {
+        val arrayList = ArrayList<TimeLabel>()
+        val j10 = this.mEndTime
+        val j11 = this.mStartTime
+        if (j11 in 1..<j10) {
+            val calendar = Calendar.getInstance()
+            calendar.timeInMillis = mStartTime
+            calendar[Calendar.MILLISECOND] = 0
+            calendar[Calendar.SECOND] = 0
+            calendar[Calendar.MINUTE] = 0
+            if (calendar.timeInMillis < this.mStartTime) {
+                calendar[Calendar.HOUR_OF_DAY] = calendar[Calendar.HOUR_OF_DAY] + 1
+            }
+            val calendar2 = Calendar.getInstance()
+            calendar2.timeInMillis = mEndTime
+            calendar2[Calendar.MILLISECOND] = 0
+            calendar2[Calendar.SECOND] = 0
+            calendar2[Calendar.MINUTE] = 0
+            if (calendar[Calendar.DAY_OF_YEAR] != calendar2[Calendar.DAY_OF_YEAR] || calendar[Calendar.YEAR] != calendar2[Calendar.YEAR]) {
+                calendar[Calendar.HOUR_OF_DAY] = 0
+                calendar[Calendar.DAY_OF_YEAR] = calendar[Calendar.DAY_OF_YEAR] + 1
+            }
+            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
+            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
+            val timeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 12)
+            Logcat.d("timeMillis>>>time0:${TimeUtil.formatDateTime(timeMillis)}")
+
+            val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
+            Logcat.d("nowTimeMillis>>>time0:${TimeUtil.formatDateTime(nowTimeMillis)}")
+            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis()+ HALF_HOUR)
+            Logcat.d("nowAfterHalfHourTimeMillis>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
+
+
+            val earlyMorningTime = calendar.timeInMillis
+
+            val step = ONE_HOUR * 3L
+            val calendar4 = Calendar.getInstance()
+            val gad = ((chartStopX - chartX) / 8f).toInt()
+
+            for ((index, item) in (mStartTime..mEndTime step step).withIndex()) {
+                calendar4.clear()
+                calendar4.timeInMillis = item
+                calendar4[Calendar.MILLISECOND] = 0
+                calendar4[Calendar.SECOND] = 0
+                calendar4[Calendar.MINUTE] = 0
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}")
+                var startX = x + index * gad
+                val timeText =
+                    when (calendar4.timeInMillis) {
+                        nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
+                        earlyMorningTime -> "凌晨"
+                        timeMillis -> "12点"
+                        else -> TimeUtil.formatHourTime(item)
+                    }
+                startX += if (index == 8) -(mBottomTextWidth/2).toFloat() else 0f
+                arrayList.add(TimeLabel(mBottomTextPaint, startX, y + mBottomTextHeight / 3f, timeText))
+            }
+        }
+        return arrayList
     }
 
     private fun createHours(): ArrayList<String> {
@@ -747,28 +822,15 @@ class MultiColorLineChart @JvmOverloads constructor(
                 calendar[Calendar.HOUR_OF_DAY] = 0
                 calendar[Calendar.DAY_OF_YEAR] = calendar[Calendar.DAY_OF_YEAR] + 1
             }
-            Logcat.d(">>>time:${TimeUtil.formatTime(calendar.timeInMillis)}")
-            val earlyMorningTime = calendar.timeInMillis
-            val calendar3 = Calendar.getInstance()
-            calendar3.timeInMillis = System.currentTimeMillis()
-            calendar3[Calendar.MILLISECOND] = 0
-            calendar3[Calendar.SECOND] = 0
-            calendar3[Calendar.MINUTE] = 0
-            calendar3[Calendar.HOUR_OF_DAY] = 12
-            Logcat.d("calendar3>>>time0:${TimeUtil.formatTime(calendar3.timeInMillis)}")
+            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
+            val earlyMorningTime = TimeUtil.getDateTimeMillis(System.currentTimeMillis(),0)
+            val time12 = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 12)
+            Logcat.d("calendar3>>>time0:${TimeUtil.formatDateTime(time12)}")
 
-            val newCalendar = Calendar.getInstance()
-            newCalendar.timeInMillis = System.currentTimeMillis()
-            newCalendar[Calendar.MILLISECOND] = 0
-            newCalendar[Calendar.SECOND] = 0
-            newCalendar[Calendar.MINUTE] = 0
-            Logcat.d("newCalendar>>>time0:${TimeUtil.formatTime(newCalendar.timeInMillis)}")
-            val newCalendar1 = Calendar.getInstance()
-            newCalendar1.timeInMillis = System.currentTimeMillis() + HALF_HOUR
-            newCalendar1[Calendar.MILLISECOND] = 0
-            newCalendar1[Calendar.SECOND] = 0
-            newCalendar1[Calendar.MINUTE] = 0
-            Logcat.d("newCalendar1>>>time0:${TimeUtil.formatTime(newCalendar1.timeInMillis)}")
+            val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
+            Logcat.d("newCalendar>>>time0:${TimeUtil.formatDateTime(nowTimeMillis)}")
+            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis()+ HALF_HOUR)
+            Logcat.d("newCalendar1>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
             val step = ONE_HOUR * 3L
             val calendar4 = Calendar.getInstance()
             for (i in mStartTime..mEndTime step step) {
@@ -780,10 +842,12 @@ class MultiColorLineChart @JvmOverloads constructor(
                 calendar4[Calendar.MILLISECOND] = 0
                 calendar4[Calendar.SECOND] = 0
                 calendar4[Calendar.MINUTE] = 0
-                Logcat.d("calendar4>>>time1:${TimeUtil.formatTime(calendar4.timeInMillis)}")
-                if (calendar4.timeInMillis == newCalendar.timeInMillis || calendar4.timeInMillis == newCalendar1.timeInMillis) {
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}")
+                if (calendar4.timeInMillis == nowTimeMillis || calendar4.timeInMillis == nowAfterHalfHourTimeMillis) {
                     arrayList.add("现在")
-                } else if (calendar4.timeInMillis == calendar3.timeInMillis) {
+                }else if (calendar4.timeInMillis == nowTimeMillis || calendar4.timeInMillis == nowAfterHalfHourTimeMillis) {
+                    arrayList.add("凌晨")
+                } else if (calendar4.timeInMillis == time12) {
                     arrayList.add("12点")
                 } else
                     arrayList.add(TimeUtil.formatHourTime(i))
@@ -957,12 +1021,30 @@ class MultiColorLineChart @JvmOverloads constructor(
         }
     }
 
+    class TimeLabel(private val paint: TextPaint, val timePosition: Float, private val y: Float, val label: String) {
+        val labelHeight: Float
+        val labelWidth: Float
+
+        init {
+            val rect = Rect()
+            paint.getTextBounds(label, 0, label.length, rect)
+            val height = rect.height()
+            this.labelWidth = rect.width().toFloat()
+            this.labelHeight = (height / 2f) + y
+        }
+
+        fun drawTime(canvas: Canvas) {
+            dLog { "TimeLabel>>drawTime:$label,timePosition:$timePosition,y:$y,labelHeight:$labelHeight" }
+            canvas.drawText(label, timePosition, labelHeight, paint)
+        }
+    }
+
     //右侧百分比坐标数据
     class PercentCoordinate(
         private val hostView: MultiColorLineChart,
         i4: Float,
-        i8: Float,
-        i9: Float,
+        gad: Float,
+        height: Float,
         value: Int,
     ) {
         private val x: Float
@@ -976,7 +1058,7 @@ class MultiColorLineChart @JvmOverloads constructor(
             val format = NumberFormat.getPercentInstance().format(value / 100.0)
             this.percent = format
             this.x = if (isLayoutRtl) i4 else i4 - textWidth.toFloat()
-            this.y = (textHeight / 2f) + ((i8 + i9) - ((value * i9) / 100))
+            this.y = (textHeight / 2f) + ((gad + height) - ((value * height) / 100))
         }
 
         fun draw(canvas: Canvas, prevY: Float, linewidth: Float): Float {
@@ -1185,6 +1267,7 @@ data class StackBarPointData(
             lineTo(xLeft, y + height)
             close()
         }
+        dLog { "processPointF2>>xLeft:${xLeft},yParam3:${yParam3},xRight:$xRight,yStart:$yStart" }
         return Point(xLeft, yParam3, xRight, yStart)
     }
 
@@ -1304,7 +1387,7 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
             }
 
             MotionEvent.ACTION_UP -> {
-                if (event.y < hostView.barBubbleTopMargin) {
+                if (event.y < hostView.mVerticalGap) {
                     return false
                 }
                 if (isWithinBarRange(event.x)) {
@@ -1338,7 +1421,7 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
             }
 
             else -> {
-                if (event.y < hostView.barBubbleTopMargin) {
+                if (event.y < hostView.mVerticalGap) {
                     return false
                 }
                 if (!hostView.notSelected()) {

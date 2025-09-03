@@ -155,7 +155,11 @@ class MultiColorPathRenderer {
         paint.isAntiAlias = enabled
     }
 
-    class PointFColor(var x: Float, var y: Float, var color: Int)
+    class PointFColor(var x: Float, var y: Float, var color: Int){
+        override fun toString(): String {
+            return "{'x':$x, 'y':$y, 'color':$color}"
+        }
+    }
     companion object {
         private const val TAG = "MultiColorPathRenderer"
     }

@@ -28,7 +28,9 @@ import com.android.hwsystemmanager.utils.getDimensionPixelOffset
 import com.android.hwsystemmanager.utils.getDimensionPixelSize
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
+import com.fz.common.utils.dLog
 import java.text.NumberFormat
+import java.util.Arrays
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.abs
@@ -208,6 +210,7 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
         }
         val str2 = splitStrings[0]
         val f12 = c2675c.labelHeight.toFloat()
+        dLog { "splitStrings: ${splitStrings.joinToString(",")},f10:$f10,f11:$f11,f12:$f12" }
         canvas.drawText(str2, f11, f12, textPaint)
         updateContentDescription(str)
         canvas.drawText(splitStrings[1], f11, f12 + f10, textPaint2)
@@ -323,29 +326,24 @@ class BatteryHistoryOnlyChart @JvmOverloads constructor(
             f9921A - this.f9926F
         }
         val f18 = f11
-        val i14 = this.f9952w
-        val i15 = this.f9951v
+        val i14 = this.f9952w//height - this.chartBottomPadding
+        val i15 = this.f9951v//this.barBubbleTopMargin
         val f19 = ((i14 + i15) / 2).toFloat()
         val f20 = ((i15 - i14) / 4).toFloat()
         val m10476a: Int = dp2px(4)
         val f21 = f9952w.toFloat()
-        canvas.drawLine(f10, f21, f18, f21, this.f9938i)
+        //以下绘制x 轴标线从下往上绘制，也就是从0%-100%
+        canvas.drawLine(f10, f21, f18, f21, this.f9938i)//0%
         val f22 = this.f9952w + f20
         val paint = this.f9939j
-        canvas.drawLine(f10, f22, f18, f22, paint)
-        canvas.drawLine(f10, f19, f18, f19, paint)
+        canvas.drawLine(f10, f22, f18, f22, paint)//25%
+        canvas.drawLine(f10, f19, f18, f19, paint)//50%
         val f23 = f19 + f20
-        canvas.drawLine(f10, f23, f18, f23, paint)
+        canvas.drawLine(f10, f23, f18, f23, paint)//75%
         val f24 = f9951v.toFloat()
-        canvas.drawLine(f10, f24, f18, f24, paint)
-        canvas.drawLine(
-            f10, (this.f9952w + m10476a).toFloat(), f10,
-            f9951v.toFloat(), this.f9940k
-        )
-        canvas.drawLine(
-            f18, (this.f9952w + m10476a).toFloat(), f18,
-            f9951v.toFloat(), this.f9942m
-        )
+        canvas.drawLine(f10, f24, f18, f24, paint)//100%
+        canvas.drawLine(f10, (this.f9952w + m10476a).toFloat(), f10, f9951v.toFloat(), this.f9940k)//Y轴左侧
+        canvas.drawLine(f18, (this.f9952w + m10476a).toFloat(), f18, f9951v.toFloat(), this.f9942m)//Y轴右侧
         val arrayList2 = this.f9949t
         if (arrayList2.size == 2) {
             val c2674b = arrayList2[0]
