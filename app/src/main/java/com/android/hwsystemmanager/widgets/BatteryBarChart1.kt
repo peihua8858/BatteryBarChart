@@ -18,7 +18,6 @@ import com.android.hwsystemmanager.R
 import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.BatterHistoryUtils
 import com.android.hwsystemmanager.utils.Logcat
-import com.android.hwsystemmanager.utils.createPaint
 import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dp2px
 import com.android.hwsystemmanager.utils.getDimension

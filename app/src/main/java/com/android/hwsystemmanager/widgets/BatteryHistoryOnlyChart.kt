@@ -3,10 +3,8 @@ package com.android.hwsystemmanager.widgets
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.Shader
 import android.os.Build
 import android.text.TextPaint
 import android.text.format.DateFormat
@@ -30,7 +28,6 @@ import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.fz.common.utils.dLog
 import java.text.NumberFormat
-import java.util.Arrays
 import java.util.Calendar
 import java.util.Locale
 import kotlin.math.abs

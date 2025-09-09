@@ -5,7 +5,9 @@ import android.content.Context
 import android.content.res.Configuration
 import android.content.res.Resources
 import android.util.TypedValue
+import android.view.View
 import androidx.annotation.AttrRes
+import androidx.annotation.DimenRes
 import androidx.core.content.ContextCompat
 
 val Context.isLandscape: Boolean
@@ -18,32 +20,31 @@ fun Context.parseAttribute(@AttrRes attrRes: Int): Int {
     if (resourceId != 0 && result) {
         return resourceId
     }
+    Logcat.d("ContextExt", "resourceId$resourceId, result is $result")
     Logcat.d("ContextExt", "resource get fail, resId is $attrRes")
     return 0
 }
 
-@SuppressLint("ResourceType")
-fun Context.parseColorAttribute(@AttrRes resId: Int, z10: Boolean): Int {
+fun Context.retrieveColorFromAttribute(@AttrRes resId: Int): Int {
+    return retrieveColorFromAttribute(resId, false)
+}
+
+fun Context.retrieveColorFromAttribute(@AttrRes resId: Int, useTheme: Boolean): Int {
     val resourceId = parseAttribute(resId)
     if (resourceId == 0) {
         Logcat.d("ContextExt", "resource get fail, resId is $resId")
-        return try {
-            getColor(resId)
-//            android.graphics.Color.BLUE
-        } catch (e: Exception) {
-            0
-        }
+        return 0
     }
-    val theme = if (z10) theme else null
+    val theme = if (useTheme) theme else null
     try {
         return resources.getColor(resourceId, theme)
-    } catch (unused: Resources.NotFoundException) {
-        Logcat.d("ContextExt", "Resource no found resId is $resId")
+    } catch (_: Resources.NotFoundException) {
+        Logcat.d("ContextExt", "Resource not found, resId is $resId")
         return 0
     }
 }
 
-fun Context.getColor(resId: Int): Int {
+fun Context.getColorCompat(resId: Int): Int {
     return ContextCompat.getColor(this, resId)
 }
 
@@ -55,11 +56,28 @@ fun Context.dp2px(dp: Int): Int {
     return dp2px(dp.toFloat()).toInt()
 }
 
-fun Context.getDimension(resId: Int): Float {
+fun Context.getDimension(@DimenRes resId: Int): Float {
+    try {
+        return resources.getDimension(resId)
+    } catch (e: Throwable) {
+        Logcat.d("ContextExt", "Resource no found resId is $resId")
+        return 0.0f
+    }
+}
+
+fun Context.getDimensionPixelOffset(@DimenRes id: Int): Int {
+    return resources.getDimensionPixelOffset(id)
+}
+
+fun Context.getDimensionPixelSize(@DimenRes id: Int): Int {
+    return resources.getDimensionPixelSize(id)
+}
+
+fun Context.parseDimensionFromAttribute(@AttrRes resId: Int): Float {
     val resourceId = parseAttribute(resId)
     if (resourceId == 0) {
         Logcat.d("ContextExt", "resource get fail, resId is $resId")
-        return resources.getDimension(resId)
+        return 0f
     }
     try {
         return resources.getDimension(resourceId)

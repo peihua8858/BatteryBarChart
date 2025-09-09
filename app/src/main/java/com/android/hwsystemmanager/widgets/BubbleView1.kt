@@ -11,9 +11,9 @@ import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.TimeUtil
 import com.android.hwsystemmanager.utils.isLayoutRtl
-import com.android.hwsystemmanager.utils.r
-import com.android.hwsystemmanager.utils.v
 import com.android.hwsystemmanager.utils.dp2px
+import com.android.hwsystemmanager.utils.isFontScaleNear2_0
+import com.android.hwsystemmanager.utils.isFontScaleNear3_2
 import kotlin.math.max
 
 class BubbleView1(context: Context, selectedItem: SelectedItem) {
@@ -100,7 +100,7 @@ class BubbleView1(context: Context, selectedItem: SelectedItem) {
         this.f22173u = dp24
         val formatTime = TimeUtil.formatBatteryChooseTime(selectedItem.state, selectedItem.time)
         this.f22161i = formatTime
-        if (context.v() || context.r()) {
+        if (context.isFontScaleNear3_2() || context.isFontScaleNear2_0()) {
             paint2.textSize = 76.0f
         }
         val rect = Rect()

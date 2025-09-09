@@ -3,6 +3,8 @@
 
     <style name="Theme.HwSystemManager" parent="android:Theme.Material.Light.NoActionBar" >
         <item name="android:textColorSecondary">@color/black</item>
+        <item name="android:colorAccent">@color/black</item>
+        <item name="android:textSize">14sp</item>
     </style>
 
     <style name="power_history_sub_header_style" parent="">

@@ -88,7 +88,7 @@ fun View.createDashedPaint(strokeWidth: Float): Paint {
 @SuppressLint("ResourceType")
 fun Context.createTextPaint(textSize: Float, @ColorRes colorId: Int): TextPaint {
     val textPaint = TextPaint(TextPaint.ANTI_ALIAS_FLAG)
-    textPaint.color = parseColorAttribute(colorId, false)
+    textPaint.color = retrieveColorFromAttribute(colorId, false)
     textPaint.isAntiAlias = true
     textPaint.textSize = textSize
     return textPaint
@@ -111,7 +111,7 @@ fun View.createTextPaint(textSize: Float, @ColorRes colorId: Int): TextPaint {
 }
 
 fun Context.createTextPaint(textSize: Float): TextPaint {
-    return createTextPaint(parseColorAttribute(android.R.attr.textColorSecondary, false), textSize)
+    return createTextPaint(retrieveColorFromAttribute(android.R.attr.textColorSecondary, false), textSize)
 }
 
 fun View.createTextPaint(textSize: Float): TextPaint {

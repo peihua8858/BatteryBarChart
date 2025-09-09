@@ -88,38 +88,23 @@ class MultiColorPathRenderer {
         require(segmentColors.size == points.size) { "Invalid points or colors,points.size:${points.size} colors.size:${segmentColors.size}" }
         // 1. 构建完整路径
         this.path = Path()
-
+        // 2. 计算颜色和位置数组
+        val length = segmentColors.size
+        this.colors = IntArray(length * 2)
+        this.positions = FloatArray(length * 2)
         for ((index, item) in points.withIndex()) {
             if (index == 0) {
                 path.moveTo(item.x, item.y)
             } else {
                 path.lineTo(item.x, item.y)
             }
-        }
-        val length = segmentColors.size
-        // 2. 计算颜色和位置数组
-        this.colors = IntArray(length * 2)
-        this.positions = FloatArray(length * 2)
-
-//        for (i in segmentColors.indices) {
-//            // 每个颜色重复两次（起点和终点）
-//            colors[2 * i] = segmentColors[i]
-//            colors[2 * i + 1] = segmentColors[i]
-//
-//            // 计算位置（0到1之间均匀分布）
-//            positions[2 * i] = (i / length).toFloat()
-//            positions[2 * i + 1] =( (i + 1f) / length).toFloat()
-//        }
-        for ((index, item) in segmentColors.withIndex()) {
             // 每个颜色重复两次（起点和终点）
-            colors[2 * index] = item
-            colors[2 * index + 1] = item
+            colors[2 * index] = segmentColors[index]
+            colors[2 * index + 1] = segmentColors[index]
             // 计算位置（0到1之间均匀分布）
             positions[2 * index] = (index / length).toFloat()
-            positions[2 * index + 1] = ((index + 1f) / length).toFloat()
+            positions[2 * index + 1] = ((index + 1f) / length)
         }
-
-
     }
 
     // 设置线宽

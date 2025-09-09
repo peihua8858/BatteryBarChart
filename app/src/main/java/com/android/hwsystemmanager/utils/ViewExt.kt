@@ -7,6 +7,7 @@ import android.content.Context
 import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
+import androidx.annotation.AttrRes
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
 import androidx.annotation.Dimension
@@ -172,25 +173,28 @@ fun View.getDimension(@DimenRes id: Int): Float {
 }
 
 fun View.getDimensionPixelOffset(@DimenRes id: Int): Int {
-    return resources.getDimensionPixelOffset(id)
+    return context.getDimensionPixelOffset(id)
 }
 
 fun View.getDimensionPixelSize(@DimenRes id: Int): Int {
-    return resources.getDimensionPixelSize(id)
+    return context.getDimensionPixelSize(id)
+}
+fun View.getColor(@ColorRes colorId: Int): Int {
+    return context.getColorCompat(colorId)
 }
 
-fun View.parseColorAttribute(@ColorRes id: Int): Int {
-    return context.getColor(id)
+fun View.retrieveColorFromAttribute(@AttrRes resId: Int, useTheme: Boolean = false): Int {
+    return context.retrieveColorFromAttribute(resId, useTheme)
 }
 
-fun Context?.r(): Boolean {
+fun Context?.isFontScaleNear2_0(): Boolean {
     if (abs(fontScale - 2.0f) < 1.0E-7f) {
         return true
     }
     return false
 }
 
-fun Context?.v(): Boolean {
+fun Context?.isFontScaleNear3_2(): Boolean {
     if (abs(fontScale - 3.2f) < 1.0E-7f) {
         return true
     }

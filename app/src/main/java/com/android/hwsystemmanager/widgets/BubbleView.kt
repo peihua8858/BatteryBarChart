@@ -11,9 +11,9 @@ import com.android.hwsystemmanager.SelectedItem
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.measureTextSize
-import com.android.hwsystemmanager.utils.r
-import com.android.hwsystemmanager.utils.v
 import com.android.hwsystemmanager.utils.dp2px
+import com.android.hwsystemmanager.utils.isFontScaleNear2_0
+import com.android.hwsystemmanager.utils.isFontScaleNear3_2
 import kotlin.math.max
 
 class BubbleView(context: Context, selectedItem: SelectedItem) {
@@ -99,7 +99,7 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         val m11216d: String = TimeUtil.formatBatteryChooseTime(selectedItem.state, selectedItem.time)
         this.mText = m11216d
         paint2.textSize = context.dp2px(14f)
-        if (context.v() || context.r()) {
+        if (context.isFontScaleNear3_2() || context.isFontScaleNear2_0()) {
             paint2.textSize = 76.0f
         }
         val pair = paint2.measureTextSize(m11216d)

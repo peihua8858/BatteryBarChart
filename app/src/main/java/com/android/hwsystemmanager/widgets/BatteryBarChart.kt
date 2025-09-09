@@ -21,7 +21,6 @@ import com.android.hwsystemmanager.utils.AttributeParseUtils
 import com.android.hwsystemmanager.utils.BatterHistoryUtils
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.ScreenReaderUtils
-import com.android.hwsystemmanager.utils.createPaint
 import com.android.hwsystemmanager.utils.dp2px
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl

@@ -2,10 +2,8 @@ package com.android.hwsystemmanager.widgets
 
 import android.content.Context
 import android.graphics.Canvas
-import android.graphics.LinearGradient
 import android.graphics.Paint
 import android.graphics.Rect
-import android.graphics.Shader
 import android.text.TextPaint
 import android.text.format.DateFormat
 import android.text.format.DateUtils

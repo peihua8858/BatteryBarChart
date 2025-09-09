@@ -23,7 +23,7 @@
     <dimen name="battery_usage_margin">16dp</dimen>
     <dimen name="bettary_charging_textview_size">14sp</dimen>
     <dimen name="margin_bar_enter_text">-28dp</dimen>
-    <dimen name="margin_bar_top_bubble">40dp</dimen>
+    <dimen name="margin_bar_top_bubble">30dp</dimen>
     <dimen name="margin_l">16dp</dimen>
     <dimen name="margin_m">8dp</dimen>
     <dimen name="margin_s">4dp</dimen>
