@@ -9,8 +9,10 @@ import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.Shader
 import com.android.hwsystemmanager.utils.Logcat.d
+import com.android.hwsystemmanager.utils.argb
 import com.android.hwsystemmanager.utils.writeLog
 import com.android.hwsystemmanager.utils.writeLogFile
+import com.fz.common.utils.toFloat
 import com.google.gson.Gson
 
 /**
@@ -22,6 +24,9 @@ class MultiColorPathRenderer {
         this.style = Paint.Style.STROKE
         this.strokeWidth = 8f
         this.isAntiAlias = true
+        strokeJoin = Paint.Join.ROUND // 设置线条连接样式为圆角
+//        strokeCap = Paint.Cap.BUTT // 设置线条端点样式为圆头
+        strokeMiter = 10f
     }
     private var colors: IntArray = intArrayOf(0)
 
@@ -40,7 +45,7 @@ class MultiColorPathRenderer {
         points.add(PointF(300f, 100f))
         points.add(PointF(400f, 400f))
         points.add(PointF(500f, 200f))
-        setData(points, colors.toTypedArray())
+//        setData(points, colors.toTypedArray())
     }
 
     //    fun setData(points: List<PointFColor>) {
@@ -57,29 +62,41 @@ class MultiColorPathRenderer {
 //        writeLogFile { Gson().toJson(pointFS) }
 //        d("pointFs:" + Gson().toJson(pointFS))
 //    }
-
+    private val mPoints = mutableListOf<PointFColor>()
     fun setData(points: List<PointFColor>) {
         if (points.isEmpty()) {
             return
         }
+        mPoints.clear()
+        mPoints.addAll(points)
         // 1. 构建完整路径
         this.path = Path()
         // 2. 计算颜色和位置数组
         val length = points.size
-        this.colors = IntArray(length * 2)
-        this.positions = FloatArray(length * 2)
-        for ((index,item) in points.withIndex()) {
+        this.colors = IntArray(length * 3)
+        this.positions = FloatArray(length * 3)
+        for ((index, item) in points.withIndex()) {
             if (index == 0) {
                 path.moveTo(item.x, item.y)
             } else {
                 path.lineTo(item.x, item.y)
             }
             // 每个颜色重复两次（起点和终点）
-            colors[2 * index] = item.color
-            colors[2 * index + 1] = item.color
+            val prevItem = points.getOrNull(index - 1)
+            val nextColor = prevItem?.color ?: Color.TRANSPARENT
+            if (nextColor != Color.TRANSPARENT && nextColor != item.color) {
+                colors[2 * index] = item.color.argb(0.6f)
+                colors[2 * index + 1] = item.color
+                colors[2 * index + 2] = item.color
+            } else {
+                colors[2 * index] = item.color
+                colors[2 * index + 1] = item.color
+                colors[2 * index + 2] = item.color
+            }
             // 计算位置（0到1之间均匀分布）
-            positions[2 * index] = (index / length).toFloat()
+            positions[2 * index] = (index.toFloat() / length)
             positions[2 * index + 1] = ((index + 1f) / length)
+            positions[2 * index + 2] = ((index + 2f) / length)
         }
         writeLogFile { Gson().toJson(points) }
     }
@@ -102,8 +119,8 @@ class MultiColorPathRenderer {
             colors[2 * index] = segmentColors[index]
             colors[2 * index + 1] = segmentColors[index]
             // 计算位置（0到1之间均匀分布）
-            positions[2 * index] = (index / length).toFloat()
-            positions[2 * index + 1] = ((index + 1f) / length)
+            positions[2 * index] = (index.toFloat() / length.toFloat())
+            positions[2 * index + 1] = ((index + 1f) / length.toFloat())
         }
     }
 
@@ -132,6 +149,42 @@ class MultiColorPathRenderer {
         )
         paint.setShader(gradient)
         canvas.drawPath(path, paint)
+//        for ((index, item) in mPoints.withIndex()) {
+//            val endPoint = mPoints.getOrNull(index - 1) ?: item
+//
+//            // 使用二次贝塞尔曲线的控制点；这里为了简单示例，采用两个端点的平均位置
+//            val controlPoint = PointF(
+//                (item.x + endPoint.x) / 2,
+//                (item.y + endPoint.y) / 2 // 调整控制点的Y坐标以增强曲线效果
+//            )
+//            // 仅在第一段时直接绘制
+//            if (index == 0) {
+//                drawBezierCurve(canvas, item, controlPoint, endPoint)
+//            } else {
+//                // 确保每段的起始点与前一段的结束点连接得当
+//                val newStartPoint = PointF(item.x, item.y)
+//                drawBezierCurve(canvas, newStartPoint, controlPoint, endPoint)
+//            }
+//            paint.color = item.color // 设置当前段的颜色
+////            drawBezierCurve(canvas, item, controlPoint, endPoint)
+//        }
+
+    }
+
+    private fun drawBezierCurve(canvas: Canvas, start: PointF, control: PointF, end: PointFColor) {
+        val path = Path()
+        path.moveTo(start.x, start.y)
+        path.quadTo(control.x, control.y, end.x, end.y) // 使用二次贝塞尔曲线
+        canvas.drawPath(path, paint)
+    }
+
+    private fun drawBezierCurve(canvas: Canvas, start: PointFColor, control: PointF, end: PointFColor) {
+        val path = Path()
+        path.moveTo(start.x, start.y)
+        path.quadTo(control.x, control.y, end.x, end.y) // 使用二次贝塞尔曲线
+
+        // 绘制路径
+        canvas.drawPath(path, paint)
     }
 
 
@@ -140,11 +193,12 @@ class MultiColorPathRenderer {
         paint.isAntiAlias = enabled
     }
 
-    class PointFColor(var x: Float, var y: Float, var color: Int){
+    class PointFColor(var x: Float, var y: Float, var color: Int) {
         override fun toString(): String {
             return "{'x':$x, 'y':$y, 'color':$color}"
         }
     }
+
     companion object {
         private const val TAG = "MultiColorPathRenderer"
     }

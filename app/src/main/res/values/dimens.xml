@@ -10,7 +10,7 @@
     <dimen name="battery_history_chart_dateText_size">11dp</dimen>
     <dimen name="battery_history_chart_left_padding">24dp</dimen>
     <dimen name="battery_history_chart_line_text_margin">4dp</dimen>
-    <dimen name="battery_history_chart_linewidth">2dp</dimen>
+    <dimen name="battery_history_chart_linewidth">12dp</dimen>
     <dimen name="battery_history_chart_right_margin">24dp</dimen>
     <dimen name="battery_history_chart_x_line_size_card">1dp</dimen>
     <dimen name="battery_history_chart_y_line_size_card">1dp</dimen>

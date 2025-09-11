@@ -556,7 +556,7 @@ class BatteryBarChart @JvmOverloads constructor(
             SelectedItem(bubbleStartX, bubbleStartY, selectedTime, this.mWidth.toFloat())
         selectedItem.state = this.m7037d(startIndex, endIndex)
 
-        if (!ScreenReaderUtils.m10472c()) {
+        if (!ScreenReaderUtils.checkScreenReaderStatus()) {
             drawBubble(canvas, BubbleView(context, selectedItem))
         }
     }

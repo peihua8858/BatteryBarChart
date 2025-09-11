@@ -449,32 +449,27 @@ class MultiColorLineChart @JvmOverloads constructor(
     private fun drawBarBubble(canvas: Canvas) {
         val mBarLists = stackBarDataList
         var bubbleDrawn = false
-        val iterator2 = mBarLists.iterator()
-        var j = 0
-        while (iterator2.hasNext()) {
-            val next = iterator2.next()
-            val nextJ = j + 1
-            if (j < 0) {
+        for ((index,item) in mBarLists.withIndex() ) {
+            if (bubbleDrawn) {
                 break
             }
-
+            val nextIndex = index + 1
             // 修复：添加条件判断，确保只在需要时绘制气泡
-            if (!next.showBubble || notSelected() || bubbleDrawn) {
-                j = nextJ
+            if (!item.showBubble || notSelected()/* || bubbleDrawn*/) {
                 continue
             }
-            val barDataState = next.state
+            val barDataState = item.state
             val lastIndex = mBarLists.size - 2
-            var levelAndCharge = next.levelAndCharge
+            var levelAndCharge = item.levelAndCharge
 
-            if (j < lastIndex) {
-                val nextItem = mBarLists[nextJ]
+            if (index < lastIndex) {
+                val nextItem = mBarLists[nextIndex]
                 if (levelAndCharge.level < nextItem.levelAndCharge.level) {
                     levelAndCharge = nextItem.levelAndCharge
                 }
             }
-            val y2 = next.y
-            val startX = next.x
+            val y2 = item.y
+            val startX = item.x
             val startY =
                 (((mHeight - mVerticalGap) * ((100 - levelAndCharge.level).toFloat())) / (100f)) + y2
             Logcat.d(
@@ -507,7 +502,7 @@ class MultiColorLineChart @JvmOverloads constructor(
                 "barDataState:$barDataState,startX:$startX,f9893A:${f9893A},f9894B:${f9894B},startY:$startY,m10476a:$m10476a"
             )
             // 向上移动气泡，避免箭头覆盖曲线
-            val bubbleStartY = startY - m10476a
+            val bubbleStartY = startY
             Logcat.d(
                 "BubbleView",
                 "bubbleStartX:$bubbleStartX,bubbleStartY:$bubbleStartY,startY:$startY,m10476a:$m10476a"
@@ -521,189 +516,11 @@ class MultiColorLineChart @JvmOverloads constructor(
                 this.state = checkBatteryLevelValidity(startIndex, endIndex)
             }
             val bubbleView = BubbleView(context, point)
-            if (!ScreenReaderUtils.m10472c()) {
-                val pointY = bubbleView.startY
-                val startX = bubbleView.startX
-                val f28 = bubbleView.f22165m.toFloat()//固定值7dp
-                val f29 = f28 + startX
-                val f30 = pointY - bubbleView.f22166n//固定值7dp
-                val f31 = f30 - 1.0f
-                val f32 = bubbleView.f22157e//right
-                val f33 = bubbleView.f22170r
-                val f34 = f32 - f33
-                val textHeight = bubbleView.textHeight
-                val f36 = bubbleView.f22155c
-                val f37 = bubbleView.f22169q
-                val i18 = bubbleView.verticalPadding
-                val i19 = bubbleView.horizontalPadding//边距固定值
-                val f45 = 2f
-                val textWidth = bubbleView.textWidth//text width
-                val i20 = bubbleView.f22173u
-                val z10 = bubbleView.isRtl
-                val width = bubbleView.viewWidth
-                val rectF = bubbleView.bubbleRectF
-                // 参考drawBubbleView方法中的边界处理逻辑，确保气泡不会超出视图边界
-                rectF.apply {
-                    // 参考drawBubbleView方法中的边界处理逻辑
-                    Logcat.d(
-                        "BubbleView",
-                        "f32:$f32,f33:$f33,f29:$f29,f27:$startX,f34:$f34,i19:$i19,rectF：$this"
-                    )
-                    if (f29 > f34) {
-                        // 气泡右侧超出边界
-//                        f14 = (f30 - (i18 / f45)) - (textHeight / f45)
-                        val left = f32 - textWidth - (i19 * 2)
-                        val top = f30 - i20
-                        set(left, top, f32, f30)
-                        Logcat.d("BubbleView", "f32:$f32,f48:$textWidth,i19:$i19,rectF：$this")
-                        Logcat.d("BubbleView", "rectF：$this")
-                    } else if (startX - (textWidth / f45) > f36) {
-                        // 气泡在中间
-                        val f49 = textWidth / f45
-                        val f20 = startX - f49
-                        val left = f20 - i19.toFloat()
-                        val top = f30 - i20
-                        val right = f49 + startX + i19.toFloat()
-                        set(max(0f, left), top, right, f30)
-                        Logcat.d("BubbleView", "rectF：$this")
-                    } else {
-                        // 气泡左侧可能超出边界，确保不会超出
-                        val left = f36 // 直接靠到左侧边界
-                        val top = f30 - i20
-                        val right = left + textWidth + (i19 * 2)
-                        set(left, top, right, f30)
-                        Logcat.d("BubbleView", "rectF：$this")
-                    }
-                }
-                Logcat.d("BubbleView", "rectF：$rectF")
-                canvas.drawRoundRect(
-                    rectF,
-                    bubbleView.f22170r,
-                    bubbleView.f22171s,
-                    bubbleView.bubbleBgPaint
-                )
-
-                // 绘制气泡下方的三角形箭头，调整方向向下
-                // 参考drawBubbleView方法中的处理方式，保持三角形形状不变
-
-                var f13 = 0f
-                var f14 = 0f
-                if (f29 > f34) {
-                    f14 = (f30 - (i18 / 2f)) - (textHeight / 2f)
-                    f13 = f32
-                } else {
-                    f13 = f37 + f33 + f36
-                    if (f29 >= f13) {
-                        Logcat.d("BubbleView", "normal")
-                        f13 = f29
-                    }
-                    f14 = f31
-                }
-
-                val f38 = f13
-                var f39 = f14
-                var f15 = 0f
-                var f16 = 0f
-
-                if (z10) {
-                    val f41 = startX - f28
-                    f15 = f29
-                    if (f41 < f33 + f36) {
-                        f39 = (f30 - (i18 / 2f)) - (textHeight / 2f)
-                        f16 = f36
-                    } else {
-                        f16 = (width - f36) - i19
-                        if (f41 <= f16) {
-                            Logcat.d("BubbleView", "normal")
-                            f16 = f41
-                        }
-                        f39 = f31
-                    }
-                } else {
-                    f15 = f29
-                    f16 = f38
-                }
-
-                var f42 = startX - f28
-                var f17 = 0f
-                Logcat.d(
-                    "BubbleView",
-                    "trianglePath>>moveTo：[$startX, $pointY],lineTo：[$f16, $f39],f28:$f28,f37:$f37,f33:$f33,f36:$f36,f42:$f42"
-                )
-                if (f42 < f37 + f33 + f36) {
-                    f42 = f37 + f33 + f36
-                    f17 = (f30 - (i18 / 2f)) - (textHeight / 2)
-                } else {
-                    val f43 = (f32 - f37) - f28
-                    if (f42 > f43) {
-                        f42 = f43
-                    } else {
-                        Logcat.d("BubbleView", "normal")
-                    }
-                    f17 = f31
-                }
-
-                var f18 = 0f
-                var f21 = 0f
-
-                if (z10) {
-                    if (f15 > ((width - f36) - f37) - f33) {
-                        f42 = f32 - f37
-                        f18 = (f30 - (i18 / 2f)) - (textHeight / 2)
-                    } else {
-                        val f44 = i19 + f36 + f37
-                        if (f15 < f44) {
-                            f21 = f44
-                        } else {
-                            Logcat.d("BubbleView", "normal")
-                            f21 = f15
-                        }
-                        f42 = f21
-                        f18 = f31
-                    }
-                } else {
-                    f18 = f17
-                }
-
-                // 使用Path绘制气泡和三角形箭头，参考drawBubbleView方法
-                val aa = startX - (f16 - startX)
-                val trianglePath = Path().apply {
-                    moveTo(startX, pointY) // 顶点
-                    lineTo(f16, f39) // 第一个点
-                    lineTo(aa, f39) // 第二个点
-                    close() // 闭合路径
-                }
-                Logcat.d(
-                    "BubbleView",
-                    "trianglePath>>moveTo：[$startX, $pointY],lineTo：[$f16, $f39],lineTo：[$aa, $f18],bubbleView.f22171s:${bubbleView.f22171s},bubbleHeiht:${rectF.height()}"
-                )
-                canvas.drawPath(trianglePath, bubbleView.bubbleBgPaint)
-
-                // 绘制文本
-                val textPaint = bubbleView.textPaint
-                val fm = textPaint.fontMetrics
-                val textY = rectF.centerY() - fm.top / 2 - fm.bottom / 2
-
-                // 文字随气泡一起移动
-                val textX = rectF.left + bubbleView.horizontalPadding.toFloat()
-                if (bubbleView.isRtl) {
-                    val scaleX = bubbleView.textWidth / 2 + rectF.left + bubbleView.horizontalPadding.toFloat()
-                    val scaleY = bubbleView.textHeight / 2f
-                    canvas.scale(-1f, 1f, scaleX, scaleY)
-                }
-                Logcat.d("BubbleView", "text：${bubbleView.f22161i}")
-                canvas.drawText(
-                    bubbleView.f22161i,
-                    textX,
-                    textY,
-                    textPaint
-                )
-
+            if (!ScreenReaderUtils.checkScreenReaderStatus()) {
+                bubbleView.drawBubble(canvas)
                 // 标记已绘制气泡
                 bubbleDrawn = true
             }
-
-            j = nextJ
         }
     }
 

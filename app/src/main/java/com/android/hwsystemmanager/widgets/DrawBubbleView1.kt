@@ -218,7 +218,7 @@ object DrawBubbleView1 {
                 this.state = barChart.m7037d(barChart.startIndex, barChart.endIndex)
             }
             val bubbleView = BubbleView1(barChart.context, point)
-            if (!ScreenReaderUtils.m10472c()) {
+            if (!ScreenReaderUtils.checkScreenReaderStatus()) {
                 val pointY = bubbleView.startY
                 val f27 = bubbleView.startX
                 val f28 = bubbleView.f22165m.toFloat()//固定值7dp
@@ -474,7 +474,7 @@ object DrawBubbleView1 {
                     selectedItem.state = barChart.m7037d(barChart.startIndex, barChart.endIndex)
                     val context = barChart.context
                     bubbleView = BubbleView(context, selectedItem)
-                    if (!ScreenReaderUtils.m10472c()) {
+                    if (!ScreenReaderUtils.checkScreenReaderStatus()) {
                         val path3 = Path()
                         val pointY = bubbleView.mStartY
                         Logcat.d("BubbleView", "pointY is $pointY")

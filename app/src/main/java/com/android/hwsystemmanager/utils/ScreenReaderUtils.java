@@ -8,6 +8,8 @@ import android.view.accessibility.AccessibilityManager;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Button;
 
+import androidx.annotation.NonNull;
+
 import com.android.hwsystemmanager.MainApplication;
 
 import java.util.List;
@@ -15,67 +17,8 @@ import java.util.List;
 public final class ScreenReaderUtils {
 
 
-    public static final AccessibilityManager f16815a;
+    public static final AccessibilityManager MANAGER;
 
-
-    public static final class a extends View.AccessibilityDelegate {
-
-
-        boolean f16816a;
-
-
-        boolean f16817b;
-
-        public a(boolean z10, boolean z11) {
-            this.f16816a = z10;
-            this.f16817b = z11;
-        }
-
-        @Override 
-        public final void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
-            super.onInitializeAccessibilityNodeInfo(host, info);
-            info.setClickable(this.f16816a);
-            if (this.f16817b) {
-                info.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
-            }
-        }
-    }
-
-
-    public static final class b extends View.AccessibilityDelegate {
-        @Override 
-        public final void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
-            super.onInitializeAccessibilityNodeInfo(host, info);
-            info.setClassName(Button.class.getName());
-        }
-    }
-
-    public final static class C4250b extends View.AccessibilityDelegate {
-
-
-        boolean f16818a = true;
-
-
-        boolean f16819b;
-
-
-        boolean f16820c;
-
-        public C4250b(boolean z10, boolean z11) {
-            this.f16819b = z10;
-            this.f16820c = z11;
-        }
-
-        @Override 
-        public final void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
-            super.onInitializeAccessibilityNodeInfo(host, info);
-            info.setEnabled(this.f16818a);
-            info.setClickable(this.f16819b);
-            if (this.f16820c) {
-                info.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
-            }
-        }
-    }
 
     static {
         AccessibilityManager accessibilityManager;
@@ -85,74 +28,114 @@ public final class ScreenReaderUtils {
         } else {
             accessibilityManager = null;
         }
-        f16815a = accessibilityManager;
+        MANAGER = accessibilityManager;
     }
 
+    public static final class AccessibilityConfigurator extends View.AccessibilityDelegate {
 
-    public static boolean m10470a() {
-        int i4 = Settings.Secure.getInt(MainApplication.getContext().getContentResolver(), "accessibility_screenreader_enabled", 0);
-        Logcat.d("ScreenReaderUtils", "screen reader is " + i4);
-        if (i4 != 1) {
-            return false;
+        private boolean isClickable;
+        private boolean shouldRemoveClickAction;
+
+        public AccessibilityConfigurator(boolean isClickable, boolean shouldRemoveClickAction) {
+            this.isClickable = isClickable;
+            this.shouldRemoveClickAction = shouldRemoveClickAction;
         }
-        return true;
+
+        @Override
+        public void onInitializeAccessibilityNodeInfo(@NonNull View host, @NonNull AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(host, info);
+            info.setClickable(isClickable);
+            if (shouldRemoveClickAction) {
+                info.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
+            }
+        }
     }
 
 
-    public static final boolean m10471b() {
-        return m10470a();
+    public static final class ButtonClassModifier extends View.AccessibilityDelegate {
+        @Override
+        public void onInitializeAccessibilityNodeInfo(@NonNull View host, @NonNull AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(host, info);
+            info.setClassName(Button.class.getName());
+        }
     }
 
-    public static final boolean m10472c() {
-        List<AccessibilityServiceInfo> list;
-        boolean bool;
-        boolean z10 = true;
-        boolean z11;
-        if (m10470a()) {
+    public final static class ClickableControlDelegate extends View.AccessibilityDelegate {
+
+        boolean enabled = true;
+
+        boolean clickable;
+
+        boolean removeClickAction;
+
+        public ClickableControlDelegate(boolean clickable, boolean removeClickAction) {
+            this.clickable = clickable;
+            this.removeClickAction = removeClickAction;
+        }
+
+        @Override
+        public void onInitializeAccessibilityNodeInfo(View host, AccessibilityNodeInfo info) {
+            super.onInitializeAccessibilityNodeInfo(host, info);
+            info.setEnabled(enabled);
+            info.setClickable(clickable);
+            if (removeClickAction) {
+                info.removeAction(AccessibilityNodeInfo.AccessibilityAction.ACTION_CLICK);
+            }
+        }
+    }
+
+
+    public static boolean isScreenReaderEnabled() {
+        int isEnabled = Settings.Secure.getInt(MainApplication.getContext().getContentResolver(), "accessibility_screenreader_enabled", 0);
+        Logcat.d("ScreenReaderUtils", "screen reader is " + isEnabled);
+        return isEnabled == 1;
+    }
+
+
+    public static boolean m10471b() {
+        return isScreenReaderEnabled();
+    }
+
+    public static boolean checkScreenReaderStatus() {
+        boolean touchExplorationEnabled;
+        boolean result = true;
+        boolean isEmpty;
+        if (isScreenReaderEnabled()) {
             return true;
         }
-        Integer num = null;
-        AccessibilityManager accessibilityManager = f16815a;
-        if (accessibilityManager != null) {
-            list = accessibilityManager.getEnabledAccessibilityServiceList(1);
-        } else {
-            list = null;
+        int serviceCount = 0;
+        AccessibilityManager manager = MANAGER;
+        List<AccessibilityServiceInfo> serviceList = manager != null ? manager.getEnabledAccessibilityServiceList(1) : null;
+        touchExplorationEnabled = manager != null && manager.isTouchExplorationEnabled();
+        if (serviceList != null) {
+            serviceCount = serviceList.size();
         }
-        if (accessibilityManager != null) {
-            bool = accessibilityManager.isTouchExplorationEnabled();
-        } else {
-            bool = false;
+        Logcat.d("ScreenReaderUtils", "3rd screen reader status: " + touchExplorationEnabled + " -- " + serviceCount);
+        if (touchExplorationEnabled) {
+            isEmpty = serviceList != null && serviceList.isEmpty();
+            result = !isEmpty;
         }
-        if (list != null) {
-            num = list.size();
-        }
-        Logcat.d("ScreenReaderUtils", "3th screen reader is " + bool + " -- " + num);
-        if (bool) {
-            z11 = list != null && list.isEmpty();
-            z10 = !z11;
-        }
-        return !z10;
-
+        return !result;
     }
 
 
-    public static final void m10473d(View view, boolean z10, boolean z11) {
-        if (view != null) {
-            view.setAccessibilityDelegate(new a(z10, z11));
+    public static void setAccessibilityDelegateForView(View targetView, boolean enable, boolean flag) {
+        if (targetView != null) {
+            targetView.setAccessibilityDelegate(new AccessibilityConfigurator(enable, flag));
         }
     }
 
 
-    public static final void m10474e(View view, boolean z10, boolean z11) {
-        if (view != null) {
-            view.setAccessibilityDelegate(new C4250b(z10, z11));
+    public static void setClickableControlDelegate(View targetView, boolean enable, boolean flag) {
+        if (targetView != null) {
+            targetView.setAccessibilityDelegate(new ClickableControlDelegate(enable, flag));
         }
     }
 
 
-    public static final void m10475f(View view) {
-        if (view != null) {
-            view.setAccessibilityDelegate(new b());
+    public static void setButtonAccessibilityDelegate(View buttonView) {
+        if (buttonView != null) {
+            buttonView.setAccessibilityDelegate(new ButtonClassModifier());
         }
     }
 }

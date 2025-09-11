@@ -206,7 +206,7 @@ public class DrawBubbleView {
                     selectedItem.setState(barChart.m7037d(barChart.getStartIndex(), barChart.getEndIndex()));
                     Context context = barChart.getContext();
                     bubbleView = new BubbleView(context, selectedItem);
-                    if (!ScreenReaderUtils.m10472c()) {
+                    if (!ScreenReaderUtils.checkScreenReaderStatus()) {
                         Path path3 = new Path();
                         float pointY = bubbleView.mStartY;
                         Logcat.d("BubbleView", "pointY is " + pointY);
