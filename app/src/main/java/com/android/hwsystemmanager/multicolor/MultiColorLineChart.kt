@@ -449,20 +449,13 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     private fun drawBarBubble(canvas: Canvas) {
         val mBarLists = stackBarDataList
-        var bubbleDrawn = false
         for ((index, item) in mBarLists.withIndex()) {
-//            if (bubbleDrawn) {
-//                break
-//            }
-            val nextIndex = index + 1
             // 修复：添加条件判断，确保只在需要时绘制气泡
-            if (!item.showBubble || notSelected()/* || bubbleDrawn*/) {
-                continue
-            }
             val barDataState = item.state
-            if (barDataState == 0) {
+            if (!item.showBubble || notSelected() || barDataState == 0) {
                 continue
             }
+            val nextIndex = index + 1
             val lastIndex = mBarLists.size - 2
             var levelAndCharge = item.levelAndCharge
 
@@ -493,22 +486,20 @@ class MultiColorLineChart @JvmOverloads constructor(
 
                 2 -> {
                     // prevLevel < curLevel
-                    startX -f9894B / 2f
+                    startX - f9894B / 2f
                 }
 
-                else -> {
-                  startX
-                }
+                else -> startX
             }
             Logcat.d(
                 "BubbleView",
                 "barDataState:$barDataState,startX:$startX,f9893A:${f9893A},f9894B:${f9894B},startY:$startY,mLineWidth:$mLineWidth"
             )
             // 向上移动气泡，避免箭头覆盖曲线
-            val bubbleStartY = startY-mLineWidth/2f
+            val bubbleStartY = startY - mLineWidth / 2f
             Logcat.d(
                 "BubbleView",
-                "bubbleStartX:$bubbleStartX,bubbleStartY:$bubbleStartY,startY:$startY,chartWidth:$chartWidth"
+                "bubbleStartX:$bubbleStartX,bubbleStartY:$bubbleStartY,startY:$startY,mLineWidth:$mLineWidth"
             )
             val point = SelectedItem(
                 bubbleStartX,
@@ -521,8 +512,6 @@ class MultiColorLineChart @JvmOverloads constructor(
             val bubbleView = BubbleView(context, point)
             if (!ScreenReaderUtils.checkScreenReaderStatus()) {
                 bubbleView.drawBubble(canvas)
-                // 标记已绘制气泡
-                bubbleDrawn = true
             }
         }
     }

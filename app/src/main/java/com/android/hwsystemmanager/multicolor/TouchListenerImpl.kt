@@ -167,10 +167,8 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                             }
                         } else if (curLevel == 0) {
                             prevBarData.state = -1
-                        } else if (prevLevel == 0) {
-                            item.state = -1
                         } else {
-                            Logcat.d(MultiColorLineChart.TAG, "invalid")
+                            item.state = -1
                         }
                     }
                 }
