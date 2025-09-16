@@ -129,7 +129,7 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
                 Logcat.d("BubbleView", "rectF：$this")
             } else if (startX - (textWidth / f45) > f22155c) {
                 // 气泡在中间
-                val f49 = textWidth / f45
+                val f49 = textWidth / 2f
                 val f20 = startX - f49
                 val left = f20 - horizontalPadding.toFloat()
                 val top = f30 - f22173u
