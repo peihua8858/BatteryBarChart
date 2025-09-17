@@ -7,6 +7,7 @@ class MainApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         mContext = this
+        ExceptionHandlerImpl.init()
     }
 
     companion object {
