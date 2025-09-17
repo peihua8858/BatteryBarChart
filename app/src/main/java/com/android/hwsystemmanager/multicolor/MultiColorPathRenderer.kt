@@ -8,11 +8,8 @@ import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.RectF
 import android.graphics.Shader
-import com.android.hwsystemmanager.utils.Logcat.d
 import com.android.hwsystemmanager.utils.argb
-import com.android.hwsystemmanager.utils.writeLog
 import com.android.hwsystemmanager.utils.writeLogFile
-import com.fz.common.utils.toFloat
 import com.google.gson.Gson
 
 /**
@@ -45,30 +42,13 @@ class MultiColorPathRenderer {
         points.add(PointF(300f, 100f))
         points.add(PointF(400f, 400f))
         points.add(PointF(500f, 200f))
-//        setData(points, colors.toTypedArray())
+        setData(points, colors.toTypedArray())
     }
 
-    //    fun setData(points: List<PointFColor>) {
-//        val pointFS: MutableList<PointF> = ArrayList()
-//        val colors: MutableList<Int> = ArrayList()
-//        for (point in points) {
-//            colors.add(point.color)
-//            pointFS.add(PointF(point.x, point.y))
-////            if (pointFS.size>=136) {
-////                break
-////            }
-//        }
-//        setData(pointFS, colors.toTypedArray<Int>())
-//        writeLogFile { Gson().toJson(pointFS) }
-//        d("pointFs:" + Gson().toJson(pointFS))
-//    }
-    private val mPoints = mutableListOf<PointFColor>()
     fun setData(points: List<PointFColor>) {
         if (points.isEmpty()) {
             return
         }
-        mPoints.clear()
-        mPoints.addAll(points)
         // 1. 构建完整路径
         this.path = Path()
         // 2. 计算颜色和位置数组
@@ -148,42 +128,6 @@ class MultiColorPathRenderer {
             Shader.TileMode.CLAMP
         )
         paint.setShader(gradient)
-        canvas.drawPath(path, paint)
-//        for ((index, item) in mPoints.withIndex()) {
-//            val endPoint = mPoints.getOrNull(index - 1) ?: item
-//
-//            // 使用二次贝塞尔曲线的控制点；这里为了简单示例，采用两个端点的平均位置
-//            val controlPoint = PointF(
-//                (item.x + endPoint.x) / 2,
-//                (item.y + endPoint.y) / 2 // 调整控制点的Y坐标以增强曲线效果
-//            )
-//            // 仅在第一段时直接绘制
-//            if (index == 0) {
-//                drawBezierCurve(canvas, item, controlPoint, endPoint)
-//            } else {
-//                // 确保每段的起始点与前一段的结束点连接得当
-//                val newStartPoint = PointF(item.x, item.y)
-//                drawBezierCurve(canvas, newStartPoint, controlPoint, endPoint)
-//            }
-//            paint.color = item.color // 设置当前段的颜色
-////            drawBezierCurve(canvas, item, controlPoint, endPoint)
-//        }
-
-    }
-
-    private fun drawBezierCurve(canvas: Canvas, start: PointF, control: PointF, end: PointFColor) {
-        val path = Path()
-        path.moveTo(start.x, start.y)
-        path.quadTo(control.x, control.y, end.x, end.y) // 使用二次贝塞尔曲线
-        canvas.drawPath(path, paint)
-    }
-
-    private fun drawBezierCurve(canvas: Canvas, start: PointFColor, control: PointF, end: PointFColor) {
-        val path = Path()
-        path.moveTo(start.x, start.y)
-        path.quadTo(control.x, control.y, end.x, end.y) // 使用二次贝塞尔曲线
-
-        // 绘制路径
         canvas.drawPath(path, paint)
     }
 

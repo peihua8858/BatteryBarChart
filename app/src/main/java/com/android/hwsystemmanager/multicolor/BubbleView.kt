@@ -34,16 +34,16 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         this.textSize = context.dp2px(12f)
         this.color = context.retrieveColorFromAttribute(android.R.attr.textColorPrimaryInverse)
     }
-    val f22155c: Float
+    val leftMargin: Float
     val viewWidth: Float = selectedItem.screenWidth
     val isRtl: Boolean = isLayoutRtl
-    val f22157e: Float
+    val maxBubbleRightBound: Float
     val startX: Float = selectedItem.startX
     val startY: Float = selectedItem.startY
     var formatTime: String
     val textWidth: Float
     val textHeight: Float
-    val f22164l: Float
+    val bubbleWidth: Float
     val horizonalOffset = context.dp2px(7f)
     val verticalOffset = context.dp2px(7f)
     val horizontalPadding: Int = context.dp2px(12)
@@ -52,19 +52,19 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
     val radiusX: Float
     val radiusY: Float
     val bubbleRectF: RectF = RectF()
-    var f22173u: Int
+    var bubbleHeight: Int
 
     init {
         val isOMR1 = isOreoR1
-        val m14219b = if (isOMR1) {
+        val leftMargin = if (isOMR1) {
             0.0f
         } else {
             context.parseDimensionFromAttribute(33620168)
         }
-        this.f22155c = m14219b
-        val m14219b2 = if (isOMR1) 0.0f else context.parseDimensionFromAttribute(33620170)
-        this.f22157e = viewWidth - m14219b2
-        this.offsetLeftEdge = (-m14219b) / 2f
+        this.leftMargin = leftMargin
+        val rightMargin = if (isOMR1) 0.0f else context.parseDimensionFromAttribute(33620170)
+        this.maxBubbleRightBound = viewWidth - rightMargin
+        this.offsetLeftEdge = (-leftMargin) / 2f
         val dp24 = context.dp2px(24)
         this.formatTime = TimeUtil.formatBatteryChooseTime(selectedItem.state, selectedItem.time)
         if (context.isFontScaleNear3_2() || context.isFontScaleNear2_0()) {
@@ -79,13 +79,13 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         Logcat.d("BatteryHistoryChartPaintFactory", "height is $height")
         this.textHeight = height
         Logcat.d("BubbleView", "text is $formatTime")
-        val f13 = (height / 2f) + verticalPadding
-        this.radiusX = f13
-        this.radiusY = f13
-        val f14 = (f13 * 2f) + width + horizontalPadding
-        this.f22164l = f14
-        this.f22173u = max(dp24, (verticalPadding + height).toInt())
-        Logcat.d("BubbleView", "bubbleWidth is $f14")
+        val radius = (height / 2f) + verticalPadding
+        this.radiusX = radius
+        this.radiusY = radius
+        val bubbleWidth = (radius * 2f) + width + horizontalPadding
+        this.bubbleWidth = bubbleWidth
+        this.bubbleHeight = max(dp24, (verticalPadding + height).toInt())
+        Logcat.d("BubbleView", "bubbleWidth is $bubbleWidth")
         dLog { "getResourceName>>>>>colorAccent:${Resources.getSystem().getResourceName(android.R.attr.colorAccent)}" }
         dLog { "getResourceName>>>>>colorAccent1:${context.resources.getResourceName(android.R.attr.colorAccent)}" }
         try {
@@ -99,49 +99,39 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
     }
 
     fun drawBubble(canvas: Canvas) {
-        val f29 = horizonalOffset + startX
-        val f30 = startY - this.verticalOffset//固定值7dp
-        val f31 = f30 - 1.0f
-        val f34 = f22157e - radiusX
-        var f13 = 0f
-        var f14 = 0f
+        val bubbleStartX = horizonalOffset + startX
+        val bubbleTopY = startY - this.verticalOffset//固定值7dp
+        val arrowTipY = bubbleTopY - 1.0f
+        val maxBubbleRightX = maxBubbleRightBound - radiusX
         // 参考drawBubbleView方法中的边界处理逻辑，确保气泡不会超出视图边界
         bubbleRectF.apply {
             // 参考drawBubbleView方法中的边界处理逻辑
             Logcat.d(
                 "BubbleView",
-                "f22157e:$f22157e,radiusX:$radiusX,f29:$f29,f27:$startX,f34:$f34,i19:$horizontalPadding,rectF：$this"
+                "f22157e:$maxBubbleRightBound,radiusX:$radiusX,bubbleStartX:$bubbleStartX,startX:$startX,maxBubbleRightX:$maxBubbleRightX,horizontalPadding:$horizontalPadding,rectF：$this"
             )
-            val f45 = 2f
-            val f46 = f22164l / f45
-            val f47 = f46 + startX
-            if (f47 > f22157e) {
-                Logcat.d("BubbleView", "bubble right")
-                val f19 = (f22157e - textWidth) - (horizontalPadding * 2)
-                set(f19, f30 - f22173u, f22157e, f30)
-            } else if (f29 > f34) {
+          if (bubbleStartX > maxBubbleRightX) {
                 // 气泡右侧超出边界
-                f14 = (f30 - (verticalPadding / f45)) - (textHeight / f45)
-                val left = f22157e - textWidth - (horizontalPadding * 2)
-                val top = f30 - f22173u
-                set(left, top, f22157e, f30)
-                Logcat.d("BubbleView", "f22157e:$f22157e,f48:$textWidth,i19:$horizontalPadding,rectF：$this")
+                val left = maxBubbleRightBound - textWidth - (horizontalPadding * 2)
+                val top = bubbleTopY - bubbleHeight
+                set(left, top, maxBubbleRightBound, bubbleTopY)
+                Logcat.d("BubbleView", "maxBubbleRightBound:$maxBubbleRightBound,textWidth:$textWidth,horizontalPadding:$horizontalPadding,rectF：$this")
                 Logcat.d("BubbleView", "rectF：$this")
-            } else if (startX - (textWidth / f45) > f22155c) {
+            } else if (startX - (textWidth / 2f) > leftMargin) {
                 // 气泡在中间
-                val f49 = textWidth / 2f
-                val f20 = startX - f49
-                val left = f20 - horizontalPadding.toFloat()
-                val top = f30 - f22173u
-                val right = f49 + startX + horizontalPadding.toFloat()
-                set(max(0f, left), top, right, f30)
+                val halfTextWidth = textWidth / 2f
+                val textCenterX = startX - halfTextWidth
+                val left = textCenterX - horizontalPadding
+                val top = bubbleTopY - bubbleHeight
+                val right = halfTextWidth + startX + horizontalPadding
+                set(max(0f, left), top, right, bubbleTopY)
                 Logcat.d("BubbleView", "rectF：$this")
             } else {
                 // 气泡左侧可能超出边界，确保不会超出
-                val left = f22155c // 直接靠到左侧边界
-                val top = f30 - f22173u
+                val left = leftMargin // 直接靠到左侧边界
+                val top = bubbleTopY - bubbleHeight
                 val right = left + textWidth + (horizontalPadding * 2)
-                set(left, top, right, f30)
+                set(left, top, right, bubbleTopY)
                 Logcat.d("BubbleView", "rectF：$this")
             }
         }
@@ -156,95 +146,50 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         // 绘制气泡下方的三角形箭头，调整方向向下
         // 参考drawBubbleView方法中的处理方式，保持三角形形状不变
 
-
-        if (f29 > f34) {
-            f14 = (f30 - (verticalPadding / 2f)) - (textHeight / 2f)
-            f13 = f22157e
+        var arrowBaseX = 0f
+        var arrowTipYAdjusted = 0f
+        if (bubbleStartX > maxBubbleRightX) {
+            arrowTipYAdjusted = (bubbleTopY - (verticalPadding / 2f)) - (textHeight / 2f)
+            arrowBaseX = maxBubbleRightBound
         } else {
-            f13 = offsetLeftEdge + radiusX + f22155c
-            if (f29 >= f13) {
+            arrowBaseX = offsetLeftEdge + radiusX + leftMargin
+            if (bubbleStartX >= arrowBaseX) {
                 Logcat.d("BubbleView", "normal")
-                f13 = f29
+                arrowBaseX = bubbleStartX
             }
-            f14 = f31
+            arrowTipYAdjusted = arrowTipY
         }
 
-        val f38 = f13
-        var f39 = f14
-        var f15 = 0f
-        var f16 = 0f
-
+        var arrowBottomY = arrowTipYAdjusted
+        var arrowRightAnchorX = 0f
         if (isRtl) {
-            val f41 = startX - horizonalOffset
-            f15 = f29
-            if (f41 < radiusX + f22155c) {
-                f39 = (f30 - (verticalPadding / 2f)) - (textHeight / 2f)
-                f16 = f22155c
+            val anchorPointX = startX - horizonalOffset
+            if (anchorPointX < radiusX + leftMargin) {
+                arrowBottomY = (bubbleTopY - (verticalPadding / 2f)) - (textHeight / 2f)
+                arrowRightAnchorX = leftMargin
             } else {
-                f16 = (viewWidth - f22155c) - horizontalPadding
-                if (f41 <= f16) {
+                arrowRightAnchorX = (viewWidth - leftMargin) - horizontalPadding
+                if (anchorPointX <= arrowRightAnchorX) {
                     Logcat.d("BubbleView", "normal")
-                    f16 = f41
+                    arrowRightAnchorX = anchorPointX
                 }
-                f39 = f31
+                arrowBottomY = arrowTipY
             }
         } else {
-            f15 = f29
-            f16 = f38
-        }
-
-        var f42 = startX - horizonalOffset
-        var f17 = 0f
-        Logcat.d(
-            "BubbleView",
-            "trianglePath>>moveTo：[$startX, $startY],lineTo：[$f16, $f39],horizonalOffset:$horizonalOffset,f37:$offsetLeftEdge,radiusX:$radiusX,f22155c:$f22155c,f42:$f42"
-        )
-        if (f42 < offsetLeftEdge + radiusX + f22155c) {
-            f42 = offsetLeftEdge + radiusX + f22155c
-            f17 = (f30 - (verticalPadding / 2f)) - (textHeight / 2)
-        } else {
-            val f43 = (f22157e - offsetLeftEdge) - horizonalOffset
-            if (f42 > f43) {
-                f42 = f43
-            } else {
-                Logcat.d("BubbleView", "normal")
-            }
-            f17 = f31
-        }
-
-        var f18 = 0f
-        var f21 = 0f
-
-        if (isRtl) {
-            if (f15 > ((viewWidth - f22155c) - offsetLeftEdge) - radiusX) {
-                f42 = f22157e - offsetLeftEdge
-                f18 = (f30 - (verticalPadding / 2f)) - (textHeight / 2)
-            } else {
-                val f44 = horizontalPadding + f22155c + offsetLeftEdge
-                if (f15 < f44) {
-                    f21 = f44
-                } else {
-                    Logcat.d("BubbleView", "normal")
-                    f21 = f15
-                }
-                f42 = f21
-                f18 = f31
-            }
-        } else {
-            f18 = f17
+            arrowRightAnchorX = arrowBaseX
         }
 
         // 使用Path绘制气泡和三角形箭头，参考drawBubbleView方法
-        val aa = startX - (f16 - startX)
+        val arrowLeftBaseX = startX - (arrowRightAnchorX - startX)
         val trianglePath = Path().apply {
             moveTo(startX, startY) // 顶点
-            lineTo(f16, f39) // 第一个点
-            lineTo(aa, f39) // 第二个点
+            lineTo(arrowRightAnchorX, arrowBottomY) // 第一个点
+            lineTo(arrowLeftBaseX, arrowBottomY) // 第二个点
             close() // 闭合路径
         }
         Logcat.d(
             "BubbleView",
-            "trianglePath>>moveTo：[$startX, $startY],lineTo：[$f16, $f39],lineTo：[$aa, $f18],this.f22171s:${this.radiusY},bubbleHeiht:${bubbleRectF.height()}"
+            "trianglePath>>moveTo：[$startX, $startY],lineTo：[$arrowRightAnchorX, $arrowBottomY],lineTo：[$arrowLeftBaseX, $arrowBottomY],this.f22171s:${this.radiusY},bubbleHeiht:${bubbleRectF.height()}"
         )
         canvas.drawPath(trianglePath, this.bubbleBgPaint)
 
@@ -254,9 +199,9 @@ class BubbleView(context: Context, selectedItem: SelectedItem) {
         val textY = bubbleRectF.centerY() - fm.top / 2 - fm.bottom / 2
 
         // 文字随气泡一起移动
-        val textX = bubbleRectF.left + this.horizontalPadding.toFloat()
+        val textX = bubbleRectF.left + this.horizontalPadding
         if (this.isRtl) {
-            val scaleX = this.textWidth / 2 + bubbleRectF.left + this.horizontalPadding.toFloat()
+            val scaleX = this.textWidth / 2 + bubbleRectF.left + this.horizontalPadding
             val scaleY = this.textHeight / 2f
             canvas.scale(-1f, 1f, scaleX, scaleY)
         }

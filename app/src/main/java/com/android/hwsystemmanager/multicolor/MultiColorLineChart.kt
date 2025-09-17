@@ -1,15 +1,11 @@
 package com.android.hwsystemmanager.multicolor
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
-import android.graphics.LinearGradient
 import android.graphics.Paint
-import android.graphics.Path
 import android.graphics.PointF
 import android.graphics.Rect
-import android.graphics.Shader
 import android.text.BidiFormatter
 import android.text.TextPaint
 import android.text.format.DateFormat
@@ -29,20 +25,17 @@ import com.android.hwsystemmanager.multicolor.MultiColorPathRenderer.PointFColor
 import com.android.hwsystemmanager.utils.Logcat
 import com.android.hwsystemmanager.utils.ScreenReaderUtils
 import com.android.hwsystemmanager.utils.TimeUtil
-import com.android.hwsystemmanager.utils.argb
 import com.android.hwsystemmanager.utils.createDashedPaint
 import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dLog
 import com.android.hwsystemmanager.utils.dp2px
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
-import com.android.hwsystemmanager.utils.isPie
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.parseInt
 import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
-import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.roundToInt
 
@@ -51,8 +44,15 @@ class MultiColorLineChart @JvmOverloads constructor(
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0,
 ) : View(context, attrs, defStyleAttr) {
-    var f9893A: Float = 0f
-    var f9894B: Float = 0f
+    /**
+     * 2/3 bar width
+     */
+    var twoThirdsBarWidth: Float = 0f
+
+    /**
+     * 1/3 bar width
+     */
+    var oneThirdBarWidth: Float = 0f
     val batteryDataList = mutableListOf<LevelAndCharge>()
     val stackBarDataList = mutableListOf<StackBarPointData>()
     private val mPercentCoorList = mutableListOf<PercentCoordinate>()
@@ -222,7 +222,6 @@ class MultiColorLineChart @JvmOverloads constructor(
             return ONE_HOUR
         }
 
-    //m7037d
     fun checkBatteryLevelValidity(startIndex: Int, endIndex: Int): Int {
         if (startIndex < 0) {
             return 0
@@ -258,22 +257,20 @@ class MultiColorLineChart @JvmOverloads constructor(
     }
 
     private fun is24HourFormat(): Boolean {
-        val z10 = this.mEndTime - this.mStartTime >= 82800000
-        return z10 && !DateFormat.is24HourFormat(context)
+        val isLongDuration = this.mEndTime - this.mStartTime >= 82800000
+        return isLongDuration && !DateFormat.is24HourFormat(context)
     }
 
     public override fun dispatchHoverEvent(event: MotionEvent): Boolean {
-        val z10: Boolean
         val barChartTouchHelper = this.barChartTouchHelper
-        z10 = barChartTouchHelper.dispatchHoverEvent(event)
-        return !(!z10 && !super.dispatchHoverEvent(event))
+        val result = barChartTouchHelper.dispatchHoverEvent(event)
+        return !(!result && !super.dispatchHoverEvent(event))
     }
 
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val z10: Boolean
         val barChartTouchHelper = this.barChartTouchHelper
-        z10 = barChartTouchHelper.dispatchKeyEvent(event)
-        return !(!z10 && !super.dispatchKeyEvent(event))
+        val result = barChartTouchHelper.dispatchKeyEvent(event)
+        return !(!result && !super.dispatchKeyEvent(event))
     }
 
     override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
@@ -282,10 +279,6 @@ class MultiColorLineChart @JvmOverloads constructor(
         if (is24HourFormat()) {
             height += (this.chartAboveTextSize * 1.5).toInt()
         }
-        Logcat.d(
-            TAG, "onMeasure height:$height, mHeight:$mHeight,chartHeight:$chartHeight, mBottomTextHeight:$mBottomTextHeight," +
-                    "\nchartBottomPadding:$chartBottomPadding,paddingTop:$paddingTop,paddingBottom:$paddingBottom"
-        )
         setMeasuredDimension(MeasureSpec.getSize(widthMeasureSpec), height)
     }
 
@@ -304,14 +297,14 @@ class MultiColorLineChart @JvmOverloads constructor(
         processData()
         val size = dataLength
         if (size != 0 && stackBarDataList.isNotEmpty()) {
-            for (i11 in 0..<size) {
-                if (batteryDataList[i11].level != 0 && i11 != 0) {
-                    this.lastIndex = i11
+            for (index in 0..<size) {
+                if (batteryDataList[index].level != 0 && index != 0) {
+                    this.lastIndex = index
                 }
             }
-            val i12 = size - 1
-            if (batteryDataList[i12].level != 0) {
-                this.lastIndex = i12
+            val lastIndex = size - 1
+            if (batteryDataList[lastIndex].level != 0) {
+                this.lastIndex = lastIndex
             }
             val formatDateTime = DateUtils.formatDateTime(
                 context,
@@ -320,9 +313,9 @@ class MultiColorLineChart @JvmOverloads constructor(
             val formatDateTime2 = DateUtils.formatDateTime(
                 context, batteryDataList[lastIndex].time, 17
             )
-            val m9243i = context.getString(R.string.power_battery_choose_info)
+            val format = context.getString(R.string.power_battery_choose_info)
             val format2 = String.format(
-                m9243i, formatDateTime, formatDateTime2,
+                format, formatDateTime, formatDateTime2,
                 stackBarDataList[0].precentLevel, stackBarDataList[lastIndex].precentLevel
             )
             contentDescription = format2
@@ -342,20 +335,25 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     fun calculateBarDimensions() {
         Logcat.d(TAG, "bar isLand $isLandscape")
-        val f10 = ((this.chartStopX - chartX)) / 48f
-        this.mBarWidth = f10
+        val barWidth = ((this.chartStopX - chartX)) / 48f
+        this.mBarWidth = barWidth
 //        this.f9911q = this.f9903i
-        this.f9893A = 0.6666667f * f10
-        this.f9894B = f10 * 0.33333334f
+        this.twoThirdsBarWidth = 0.6666667f * barWidth
+        this.oneThirdBarWidth = barWidth * 0.33333334f
     }
 
     private fun processData() {
-        var z12 = false
+        // 表示当前和下一个数据点是否处于充电状态且满足绘制条件
+        var isCurrentAndNextChargingAndDrawable = false
+        // 表示是否已经找到低电量区域
+        var hasFoundLowBatteryArea = false
+        // 表示是否还在寻找第一个可绘制的充电区域
+        var isStillLookingForFirstDrawableArea = true
+        // 表示下一个数据点是否为低电量（<=81%）
+        var isNextLowBattery = false
+        var z15 = true
         stackBarDataList.clear()
-        var i8 = -1
-        var z16 = false
-        var z17 = true
-        var z14 = false
+        var indexHorizontalSufficient = -1
         val xOffset = chartX + xOffset//2dp 或3dp
         val y = chartY
         val barHeight = this.chartStopY - y
@@ -375,40 +373,39 @@ class MultiColorLineChart @JvmOverloads constructor(
                     .setChartLineWidth(mLineWidth)
             stackBarData.index = index
             val nextCharge = batteryDataList.getOrNull(index + 1)
-            Logcat.d(TAG, " area indexHorizontalSufficient = $i8")
+            Logcat.d(TAG, " area indexHorizontalSufficient = $indexHorizontalSufficient")
             if (nextCharge != null) {
                 val isCharge = item.charge == "true"
                 val isNextCharge = index < 47 && nextCharge.charge == "true"
-                z14 = index < 47 && nextCharge.level <= 81
+                isNextLowBattery = index < 47 && nextCharge.level <= 81
                 val z11 = !(!isLandscape && this.mBarWidth < dp2px(11.0f))
-                z12 = (isNextCharge || z11) && isCharge
+                isCurrentAndNextChargingAndDrawable = (isNextCharge || z11) && isCharge
             }
-            val z13 = item.level <= 81
-            if (z12 && z17) {
-                if (i8 == -1) {
-                    i8 = index
+            val isCurrentLowBattery = item.level <= 81
+            if (isCurrentAndNextChargingAndDrawable && isStillLookingForFirstDrawableArea) {
+                if (indexHorizontalSufficient == -1) {
+                    indexHorizontalSufficient = index
                 }
-                Logcat.d(TAG, " area indexHorizontalSufficient = $i8")
-                if (z13 && z14) {
+                Logcat.d(TAG, " area indexHorizontalSufficient = $indexHorizontalSufficient")
+                if (isCurrentLowBattery && isNextLowBattery) {
                     Logcat.d(TAG, "this area should draw index = $index")
-                    z17 = false
-                    z16 = true
+                    isStillLookingForFirstDrawableArea = false
+                    hasFoundLowBatteryArea = true
                 }
             }
             stackBarDataList.add(stackBarData)
         }
-        var z15 = true
         processPointF2()
         if (!notSelected()) {
             onTouchListener.updateBarStates()
         }
-        if (!z16) {
+        if (!hasFoundLowBatteryArea) {
             val arrayList = this.stackBarDataList
-            if (i8 < 0 || i8 > arrayList.size - 1) {
+            if (indexHorizontalSufficient < 0 || indexHorizontalSufficient > arrayList.size - 1) {
                 z15 = false
             }
             if (z15) {
-                Logcat.d(TAG, "normal is not draw indexHorizontalSuffcient is $i8")
+                Logcat.d(TAG, "normal is not draw indexHorizontalSuffcient is $indexHorizontalSufficient")
             }
         }
     }
@@ -477,23 +474,22 @@ class MultiColorLineChart @JvmOverloads constructor(
             val bubbleStartX = when (barDataState) {
                 -1 -> {
                     //起始、结束位置是半个小时时
-                    startX + f9893A / 2f
+                    startX + twoThirdsBarWidth / 2f
                 }
 
                 1 -> {
-                    startX + f9893A + f9894B / 2f
+                    startX + twoThirdsBarWidth + oneThirdBarWidth / 2f
                 }
 
                 2 -> {
-                    // prevLevel < curLevel
-                    startX - f9894B / 2f
+                    startX - oneThirdBarWidth / 2f
                 }
 
                 else -> startX
             }
             Logcat.d(
                 "BubbleView",
-                "barDataState:$barDataState,startX:$startX,f9893A:${f9893A},f9894B:${f9894B},startY:$startY,mLineWidth:$mLineWidth"
+                "barDataState:$barDataState,startX:$startX,f9893A:${twoThirdsBarWidth},f9894B:${oneThirdBarWidth},startY:$startY,mLineWidth:$mLineWidth"
             )
             // 向上移动气泡，避免箭头覆盖曲线
             val bubbleStartY = startY - mLineWidth / 2f
@@ -526,9 +522,9 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     private fun createHours2(x: Float, y: Float): ArrayList<TimeLabel> {
         val arrayList = ArrayList<TimeLabel>()
-        val j10 = this.mEndTime
-        val j11 = this.mStartTime
-        if (j11 in 1..<j10) {
+        val endTime = this.mEndTime
+        val startTime = this.mStartTime
+        if (startTime in 1..<endTime) {
             val calendar = Calendar.getInstance()
             calendar.timeInMillis = mStartTime
             calendar[Calendar.MILLISECOND] = 0
@@ -553,7 +549,7 @@ class MultiColorLineChart @JvmOverloads constructor(
 
             val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
             Logcat.d("nowTimeMillis>>>time0:${TimeUtil.formatDateTime(nowTimeMillis)}")
-            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis()+ HALF_HOUR)
+            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis() + HALF_HOUR)
             Logcat.d("nowAfterHalfHourTimeMillis>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
 
 
@@ -561,7 +557,7 @@ class MultiColorLineChart @JvmOverloads constructor(
 
             val step = ONE_HOUR * 3L
             val calendar4 = Calendar.getInstance()
-            val gad = ((chartStopX - chartX) / 8f).toInt()
+            val gad = ((chartStopX - chartX - mBottomTextWidth * 9) / 8f).toInt()
 
             for ((index, item) in (mStartTime..mEndTime step step).withIndex()) {
                 calendar4.clear()
@@ -570,7 +566,7 @@ class MultiColorLineChart @JvmOverloads constructor(
                 calendar4[Calendar.SECOND] = 0
                 calendar4[Calendar.MINUTE] = 0
                 Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}")
-                var startX = x + index * gad
+                var startX = x + index * (gad + mBottomTextWidth)
                 val timeText =
                     when (calendar4.timeInMillis) {
                         nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
@@ -578,67 +574,10 @@ class MultiColorLineChart @JvmOverloads constructor(
                         timeMillis -> "12点"
                         else -> TimeUtil.formatHourTime(item)
                     }
-                startX += if (index == 8) -(mBottomTextWidth / 2).toFloat() else 0f
+                startX += if (index == 8) (mBottomTextWidth / 2).toFloat() else 0f
                 arrayList.add(TimeLabel(mBottomTextPaint, startX, y + mBottomTextHeight / 3f, timeText))
             }
         }
-        return arrayList
-    }
-
-    private fun createHours(): ArrayList<String> {
-        val arrayList = ArrayList<String>()
-        val j10 = this.mEndTime
-        val j11 = this.mStartTime
-        if (j11 in 1..<j10) {
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = mStartTime
-            calendar[Calendar.MILLISECOND] = 0
-            calendar[Calendar.SECOND] = 0
-            calendar[Calendar.MINUTE] = 0
-            if (calendar.timeInMillis < this.mStartTime) {
-                calendar[Calendar.HOUR_OF_DAY] = calendar[Calendar.HOUR_OF_DAY] + 1
-            }
-            val calendar2 = Calendar.getInstance()
-            calendar2.timeInMillis = mEndTime
-            calendar2[Calendar.MILLISECOND] = 0
-            calendar2[Calendar.SECOND] = 0
-            calendar2[Calendar.MINUTE] = 0
-            if (calendar[Calendar.DAY_OF_YEAR] != calendar2[Calendar.DAY_OF_YEAR] || calendar[Calendar.YEAR] != calendar2[Calendar.YEAR]) {
-                calendar[Calendar.HOUR_OF_DAY] = 0
-                calendar[Calendar.DAY_OF_YEAR] = calendar[Calendar.DAY_OF_YEAR] + 1
-            }
-            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
-            val earlyMorningTime = TimeUtil.getDateTimeMillis(System.currentTimeMillis(),0)
-            val time12 = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 12)
-            Logcat.d("calendar3>>>time0:${TimeUtil.formatDateTime(time12)}")
-
-            val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
-            Logcat.d("newCalendar>>>time0:${TimeUtil.formatDateTime(nowTimeMillis)}")
-            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis()+ HALF_HOUR)
-            Logcat.d("newCalendar1>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
-            val step = ONE_HOUR * 3L
-            val calendar4 = Calendar.getInstance()
-            for (i in mStartTime..mEndTime step step) {
-//                val curCharge = Calendar.getInstance()
-//                calendar.timeInMillis = i
-
-                calendar4.clear()
-                calendar4.timeInMillis = i
-                calendar4[Calendar.MILLISECOND] = 0
-                calendar4[Calendar.SECOND] = 0
-                calendar4[Calendar.MINUTE] = 0
-                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}")
-                if (calendar4.timeInMillis == nowTimeMillis || calendar4.timeInMillis == nowAfterHalfHourTimeMillis) {
-                    arrayList.add("现在")
-                }else if (calendar4.timeInMillis == nowTimeMillis || calendar4.timeInMillis == nowAfterHalfHourTimeMillis) {
-                    arrayList.add("凌晨")
-                } else if (calendar4.timeInMillis == time12) {
-                    arrayList.add("12点")
-                } else
-                    arrayList.add(TimeUtil.formatHourTime(i))
-            }
-        }
-//        val calendar = Calendar.getInstance()
         return arrayList
     }
 
@@ -648,21 +587,6 @@ class MultiColorLineChart @JvmOverloads constructor(
         this.batteryDataList.addAll(data)
         dataLength = data.size
         this.mIsHalfHour = 1
-//        val currentTimeMillis = System.currentTimeMillis()
-//        val endTime =
-//            if (dataLength <= 0) getHalfTime(currentTimeMillis) + (currentTimeMillis - HALF_HOUR) else data.last().time
-//        val size: Int = 48 - dataLength
-//        if (dataSize <= 48 && 1 <= size) {
-//            var index = 1
-//            while (true) {
-//                batteryDataList.add(LevelAndCharge(0, "false", (index * HALF_HOUR) + endTime))
-//                if (index == size) {
-//                    break
-//                } else {
-//                    index++
-//                }
-//            }
-//        }
         this.mEndTime = getEndTime()
         if (batteryDataList.isNotEmpty()) {
             val firstItem = batteryDataList.first()
@@ -690,38 +614,38 @@ class MultiColorLineChart @JvmOverloads constructor(
     val clickPointDescription: String
         get() {
             var selectedTime = selectedTime
-            val str = stackBarDataList[startIndex].precentLevel
-            val str2 = stackBarDataList[endIndex].precentLevel
-            val m7037d = checkBatteryLevelValidity(startIndex, endIndex)
-            var j10 = ONE_HOUR + selectedTime
+            val startBatteryLevel = stackBarDataList[startIndex].precentLevel
+            val endBatteryLevel = stackBarDataList[endIndex].precentLevel
+            val batteryLevelValidity = checkBatteryLevelValidity(startIndex, endIndex)
+            var endTimeMillis = ONE_HOUR + selectedTime
             val calendar = Calendar.getInstance()
-            if (m7037d != -1) {
-                if (m7037d == 1) {
+            if (batteryLevelValidity != -1) {
+                if (batteryLevelValidity == 1) {
                     selectedTime += HALF_HOUR
                 }
             } else {
-                j10 -= HALF_HOUR
+                endTimeMillis -= HALF_HOUR
             }
             calendar.timeInMillis = selectedTime
-            val formatDateTime = DateUtils.formatDateTime(
+            val formattedTime = DateUtils.formatDateTime(
                 context,
                 calendar.timeInMillis,
                 1
             )
-            val str3 = DateUtils.formatDateTime(
+            val startTimeWithWeek = DateUtils.formatDateTime(
                 context,
                 calendar.timeInMillis,
                 16
-            ) + formatDateTime
-            calendar.timeInMillis = j10
-            val formatDateTime2 = DateUtils.formatDateTime(
+            ) + formattedTime
+            calendar.timeInMillis = endTimeMillis
+            val endTimeFormatted = DateUtils.formatDateTime(
                 context,
                 calendar.timeInMillis,
                 1
             )
-            val m9243i =
+            val batteryInfoFormat =
                 context.getString(R.string.power_battery_choose_info)
-            val text = String.format(m9243i, str3, formatDateTime2, str, str2)
+            val text = String.format(batteryInfoFormat, startTimeWithWeek, endTimeFormatted, startBatteryLevel, endBatteryLevel)
             return BidiFormatter.getInstance().unicodeWrap(text)
         }
 
@@ -827,7 +751,7 @@ class MultiColorLineChart @JvmOverloads constructor(
     //右侧百分比坐标数据
     class PercentCoordinate(
         private val hostView: MultiColorLineChart,
-        i4: Float,
+        rightStartX: Float,
         gad: Float,
         height: Float,
         value: Int,
@@ -842,7 +766,7 @@ class MultiColorLineChart @JvmOverloads constructor(
         init {
             val format = NumberFormat.getPercentInstance().format(value / 100.0)
             this.percent = format
-            this.x = if (isLayoutRtl) i4 else i4 - textWidth.toFloat()
+            this.x = if (isLayoutRtl) rightStartX else rightStartX - textWidth.toFloat()
             this.y = (textHeight / 2f) + ((gad + height) - ((value * height) / 100))
         }
 

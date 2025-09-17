@@ -129,7 +129,6 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
         return index
     }
 
-    //m7040i
     fun resetSelectionAndUpdateBars() {
         hostView.mSelectIndex = -1
         if (mBarLists.size <= 48) {
@@ -141,7 +140,6 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
         hostView.invalidate()
     }
 
-    //m7035b
     fun updateBarStates() {
         for ((index,item) in mBarLists.withIndex() ) {
             dLog { "drawBarBubble>>>index = $index ,hostView.mIsHalfHour:${hostView.mIsHalfHour},hostView.mSelectIndex:${hostView.mSelectIndex}" }
