@@ -149,6 +149,9 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                 if (index == hostView.endIndex) {
                     if (hostView.mIsHalfHour == 1 && (index == 0 || index == 47)) {
                         item.state = -1
+                    } else if (index == 46 && mBarLists.size == 47) {
+                        //当数据不足48时，最后选中的只有最后半个小时
+                        item.state = 1
                     } else {
                         val prevIndex = index - 1
                         val prevBarData = mBarLists[prevIndex]
@@ -171,7 +174,7 @@ class TouchListenerImpl(private val hostView: MultiColorLineChart) : View.OnTouc
                     }
                 }
                 item.showBubble = true
-                dLog { "drawBarBubble>>>index = $index , item.showBubble:${ item.showBubble},item.state:${item.state}" }
+                Logcat.d("drawBarBubble>>>index = $index ,item.level=${item.levelAndCharge.level}, item.showBubble:${item.showBubble},item.state:${item.state}")
             } else {
                 item.selectState = 0
                 item.showBubble = false

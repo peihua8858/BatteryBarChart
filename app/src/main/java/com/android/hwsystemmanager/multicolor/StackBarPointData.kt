@@ -190,9 +190,9 @@ data class StackBarPointData(
         val param3Height = param3Percent * height / 100f
         val yParam3 = y + param3Height
 
-        val halfWidth = barOffset / 2f
-        val xLeft = x - halfWidth
-        val xRight = x + width - halfWidth
+//        val halfWidth = barOffset / 2f
+        val xLeft = x/* - halfWidth*/
+        val xRight = x + width/* - halfWidth*/
         mBarPath = Path().apply {
             moveTo(xLeft, yParam3)
             lineTo(xRight, yStart)

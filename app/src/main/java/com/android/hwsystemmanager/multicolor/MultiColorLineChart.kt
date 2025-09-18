@@ -87,8 +87,6 @@ class MultiColorLineChart @JvmOverloads constructor(
     var mVerticalGap: Float = 0f
         private set
     val mLeftVerticalLineWidth: Float
-    private val xOffset: Float = if (isLandscape) dp2px(3f) else dp2px(2f)
-
 
     private val mHorizontalLinePaint: Paint
     private val mVerticalLinePaint: Paint
@@ -311,12 +309,12 @@ class MultiColorLineChart @JvmOverloads constructor(
                 batteryDataList[0].time, 17
             )
             val formatDateTime2 = DateUtils.formatDateTime(
-                context, batteryDataList[lastIndex].time, 17
+                context, batteryDataList[this@MultiColorLineChart.lastIndex].time, 17
             )
             val format = context.getString(R.string.power_battery_choose_info)
             val format2 = String.format(
                 format, formatDateTime, formatDateTime2,
-                stackBarDataList[0].precentLevel, stackBarDataList[lastIndex].precentLevel
+                stackBarDataList[0].precentLevel, stackBarDataList[this@MultiColorLineChart.lastIndex].precentLevel
             )
             contentDescription = format2
         }
@@ -354,9 +352,10 @@ class MultiColorLineChart @JvmOverloads constructor(
         var z15 = true
         stackBarDataList.clear()
         var indexHorizontalSufficient = -1
-        val xOffset = chartX + xOffset//2dp 或3dp
+        val xOffset = chartX /*+ xOffset*///2dp 或3dp
         val y = chartY
         val barHeight = this.chartStopY - y
+
         for ((index, item) in batteryDataList.withIndex()) {
             val x = (index * this.mBarWidth) + xOffset
             Logcat.d(
@@ -416,7 +415,8 @@ class MultiColorLineChart @JvmOverloads constructor(
         for ((index, item) in stackBarDataList.withIndex()) {
             val preBar = stackBarDataList.getOrNull(index - 1) ?: stackBarDataList[0]
             val preLevel = preBar.levelAndCharge.level
-            item.calculatePointF(preLevel, pointFColors)
+            val point = item.calculatePointF(preLevel, pointFColors)
+            Logcat.d(TAG, "processPointF2>>processData>>>>index:${index},point:${point}")
         }
         pathRenderer.setStrokeWidth(mLineWidth)
         pathRenderer.setData(pointFColors)
@@ -553,28 +553,31 @@ class MultiColorLineChart @JvmOverloads constructor(
             Logcat.d("nowAfterHalfHourTimeMillis>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
 
 
-            val earlyMorningTime = calendar.timeInMillis
+//            val earlyMorningTime = calendar.timeInMillis
 
             val step = ONE_HOUR * 3L
             val calendar4 = Calendar.getInstance()
-            val gad = ((chartStopX - chartX - mBottomTextWidth * 9) / 8f).toInt()
+//            val numberTextWidth = mBottomTextPaint.measureText("88")
+//            val gad = ((chartStopX - chartX - mBottomTextWidth * 2f - numberTextWidth * 7f) / 8f).toInt()
 
+            val chartBarX = stackBarDataList.first().x
             for ((index, item) in (mStartTime..mEndTime step step).withIndex()) {
                 calendar4.clear()
                 calendar4.timeInMillis = item
                 calendar4[Calendar.MILLISECOND] = 0
                 calendar4[Calendar.SECOND] = 0
                 calendar4[Calendar.MINUTE] = 0
-                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}")
-                var startX = x + index * (gad + mBottomTextWidth)
-                val timeText =
-                    when (calendar4.timeInMillis) {
-                        nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
-                        earlyMorningTime -> "凌晨"
-                        timeMillis -> "12点"
-                        else -> TimeUtil.formatHourTime(item)
-                    }
-                startX += if (index == 8) (mBottomTextWidth / 2).toFloat() else 0f
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)},index:$index,chartBarX:$chartBarX,mBarWidth:$mBarWidth,mBottomTextWidth:$mBottomTextWidth")
+                var startX = x + index * mBarWidth * 6f
+                val timeText = when (calendar4.timeInMillis) {
+                    nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
+//                        earlyMorningTime -> "凌晨"
+                    timeMillis -> "12点"
+
+                    else -> TimeUtil.formatHourTime(item)
+                }
+                startX -= if (index == 0) 0f else mBottomTextWidth / 3f
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)},index:$index,startX:$startX")
                 arrayList.add(TimeLabel(mBottomTextPaint, startX, y + mBottomTextHeight / 3f, timeText))
             }
         }
