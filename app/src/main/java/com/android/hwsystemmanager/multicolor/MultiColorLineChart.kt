@@ -33,6 +33,7 @@ import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.measureTextSize
 import com.android.hwsystemmanager.utils.parseInt
+import com.android.hwsystemmanager.utils.step
 import java.text.NumberFormat
 import java.util.Calendar
 import kotlin.math.abs
@@ -175,7 +176,9 @@ class MultiColorLineChart @JvmOverloads constructor(
         barBubbleCornerRadius = typedArray.getDimension(R.styleable.MultiColorLineChart_barBubbleCornerRadius, 0f)
 
         typedArray.recycle()
-        mBottomTextPaint = createTextPaint(chartAboveTextColor, chartAboveTextSize)
+        mBottomTextPaint = createTextPaint(chartAboveTextColor, chartAboveTextSize).apply {
+            textAlign = Paint.Align.CENTER
+        }
         mPrecentTextPaint = createTextPaint(rightTextColor, rightTextSize)
         mHorizontalLinePaint = createDashedPaint(chartHorizontalLineColor, chartHorizontalLineWidth)
         mVerticalLinePaint = createDashedPaint(chartVerticalLineColor, chartVerticalLineWidth)
@@ -544,39 +547,39 @@ class MultiColorLineChart @JvmOverloads constructor(
             }
             Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
             Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
-            val timeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 12)
-            Logcat.d("timeMillis>>>time0:${TimeUtil.formatDateTime(timeMillis)}")
+            val todayNoonTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 13)
+            Logcat.d("timeMillis>>>todayNoonTimeMillis:${TimeUtil.formatDateTime(todayNoonTimeMillis)}")
 
             val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
-            Logcat.d("nowTimeMillis>>>time0:${TimeUtil.formatDateTime(nowTimeMillis)}")
+            Logcat.d("nowTimeMillis>>>nowTimeMillis:${TimeUtil.formatDateTime(nowTimeMillis)}")
             val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis() + HALF_HOUR)
-            Logcat.d("nowAfterHalfHourTimeMillis>>>time0:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
+            Logcat.d("nowAfterHalfHourTimeMillis>>>nowAfterHalfHourTimeMillis:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
 
 
 //            val earlyMorningTime = calendar.timeInMillis
 
             val step = ONE_HOUR * 3L
             val calendar4 = Calendar.getInstance()
-//            val numberTextWidth = mBottomTextPaint.measureText("88")
-//            val gad = ((chartStopX - chartX - mBottomTextWidth * 2f - numberTextWidth * 7f) / 8f).toInt()
-
-            val chartBarX = stackBarDataList.first().x
-            for ((index, item) in (mStartTime..mEndTime step step).withIndex()) {
+            for ((index, item) in (stackBarDataList step 6).withIndex()) {
+                val time = mStartTime + index * step
                 calendar4.clear()
-                calendar4.timeInMillis = item
+                calendar4.timeInMillis = time
                 calendar4[Calendar.MILLISECOND] = 0
                 calendar4[Calendar.SECOND] = 0
                 calendar4[Calendar.MINUTE] = 0
-                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)},index:$index,chartBarX:$chartBarX,mBarWidth:$mBarWidth,mBottomTextWidth:$mBottomTextWidth")
-                var startX = x + index * mBarWidth * 6f
+                Logcat.d(
+                    "calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}," +
+                            "index:$index,mBarWidth:$mBarWidth,mBottomTextWidth:$mBottomTextWidth"
+                )
                 val timeText = when (calendar4.timeInMillis) {
                     nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
 //                        earlyMorningTime -> "凌晨"
-                    timeMillis -> "12点"
+                    todayNoonTimeMillis -> "12点"
 
-                    else -> TimeUtil.formatHourTime(item)
+                    else -> TimeUtil.formatHourTime(time)
                 }
-                startX -= if (index == 0) 0f else mBottomTextWidth / 3f
+                var startX = item.x
+                startX += if (index == 0) mBarWidth else if (index == 8) mBarWidth * 3 / 2f else mBarWidth / 2f
                 Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)},index:$index,startX:$startX")
                 arrayList.add(TimeLabel(mBottomTextPaint, startX, y + mBottomTextHeight / 3f, timeText))
             }
