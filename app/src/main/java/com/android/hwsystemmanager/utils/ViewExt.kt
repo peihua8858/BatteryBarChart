@@ -4,6 +4,7 @@ import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.content.Context
+import android.graphics.drawable.Drawable
 import android.text.TextPaint
 import android.text.TextUtils
 import android.view.View
@@ -11,7 +12,10 @@ import androidx.annotation.AttrRes
 import androidx.annotation.ColorRes
 import androidx.annotation.DimenRes
 import androidx.annotation.Dimension
+import androidx.annotation.DrawableRes
 import androidx.annotation.Keep
+import androidx.annotation.StringRes
+import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.StaggeredGridLayoutManager
@@ -173,14 +177,27 @@ fun View.getDimension(@DimenRes id: Int): Float {
 }
 
 fun View.getDimensionPixelOffset(@DimenRes id: Int): Int {
-    return context.getDimensionPixelOffset(id)
+    return resources.getDimensionPixelOffset(id)
 }
 
 fun View.getDimensionPixelSize(@DimenRes id: Int): Int {
-    return context.getDimensionPixelSize(id)
+    return resources.getDimensionPixelSize(id)
 }
+
 fun View.getColor(@ColorRes colorId: Int): Int {
     return context.getColorCompat(colorId)
+}
+
+fun View.getString(@StringRes id: Int): String {
+    return context.getString(id)
+}
+
+fun View.getString(@StringRes id: Int, vararg formatArgs: Any): String {
+    return context.getString(id, formatArgs)
+}
+
+fun View.getDrawable(@DrawableRes id: Int): Drawable? {
+    return ContextCompat.getDrawable(context, id)
 }
 
 fun View.retrieveColorFromAttribute(@AttrRes resId: Int, useTheme: Boolean = false): Int {

@@ -29,6 +29,7 @@ import com.android.hwsystemmanager.utils.createDashedPaint
 import com.android.hwsystemmanager.utils.createTextPaint
 import com.android.hwsystemmanager.utils.dLog
 import com.android.hwsystemmanager.utils.dp2px
+import com.android.hwsystemmanager.utils.getString
 import com.android.hwsystemmanager.utils.isLandscape
 import com.android.hwsystemmanager.utils.isLayoutRtl
 import com.android.hwsystemmanager.utils.measureTextSize
@@ -525,63 +526,74 @@ class MultiColorLineChart @JvmOverloads constructor(
 
     private fun createHours2(x: Float, y: Float): ArrayList<TimeLabel> {
         val arrayList = ArrayList<TimeLabel>()
-        val endTime = this.mEndTime
-        val startTime = this.mStartTime
-        if (startTime in 1..<endTime) {
-            val calendar = Calendar.getInstance()
-            calendar.timeInMillis = mStartTime
-            calendar[Calendar.MILLISECOND] = 0
-            calendar[Calendar.SECOND] = 0
-            calendar[Calendar.MINUTE] = 0
-            if (calendar.timeInMillis < this.mStartTime) {
-                calendar[Calendar.HOUR_OF_DAY] = calendar[Calendar.HOUR_OF_DAY] + 1
+        Logcat.d(">>>mStartTime:${TimeUtil.formatDateTime(mStartTime)}")
+        Logcat.d(">>>mEndTime:${TimeUtil.formatDateTime(mEndTime)}")
+        if (this.mStartTime in 1..<this.mEndTime) {
+            val startTime = TimeUtil.getDateTimeMillis(mStartTime)
+            Logcat.d(">>>startTime:${TimeUtil.formatDateTime(startTime)}")
+            val earlyMorningCalendar = Calendar.getInstance()
+            earlyMorningCalendar.timeInMillis = startTime
+            earlyMorningCalendar[Calendar.MILLISECOND] = 0
+            earlyMorningCalendar[Calendar.SECOND] = 0
+            earlyMorningCalendar[Calendar.MINUTE] = 0
+            if (earlyMorningCalendar.timeInMillis < this.mStartTime) {
+                earlyMorningCalendar[Calendar.HOUR_OF_DAY] = earlyMorningCalendar[Calendar.HOUR_OF_DAY] + 1
             }
-            val calendar2 = Calendar.getInstance()
-            calendar2.timeInMillis = mEndTime
-            calendar2[Calendar.MILLISECOND] = 0
-            calendar2[Calendar.SECOND] = 0
-            calendar2[Calendar.MINUTE] = 0
-            if (calendar[Calendar.DAY_OF_YEAR] != calendar2[Calendar.DAY_OF_YEAR] || calendar[Calendar.YEAR] != calendar2[Calendar.YEAR]) {
-                calendar[Calendar.HOUR_OF_DAY] = 0
-                calendar[Calendar.DAY_OF_YEAR] = calendar[Calendar.DAY_OF_YEAR] + 1
+            val endCalendar = Calendar.getInstance()
+            endCalendar.timeInMillis = mEndTime
+            endCalendar[Calendar.MILLISECOND] = 0
+            endCalendar[Calendar.SECOND] = 0
+            endCalendar[Calendar.MINUTE] = 0
+            if (earlyMorningCalendar[Calendar.DAY_OF_YEAR] != endCalendar[Calendar.DAY_OF_YEAR]
+                || earlyMorningCalendar[Calendar.YEAR] != endCalendar[Calendar.YEAR]
+            ) {
+                earlyMorningCalendar[Calendar.HOUR_OF_DAY] = 0
+                earlyMorningCalendar[Calendar.DAY_OF_YEAR] = earlyMorningCalendar[Calendar.DAY_OF_YEAR] + 1
             }
-            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
-            Logcat.d(">>>time:${TimeUtil.formatDateTime(calendar.timeInMillis)}")
-            val todayNoonTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 13)
+            val endTime = endCalendar.timeInMillis
+            Logcat.d(">>>calendar:${TimeUtil.formatDateTime(earlyMorningCalendar.timeInMillis)}")
+            Logcat.d(">>>calendar2:${TimeUtil.formatDateTime(endCalendar.timeInMillis)}")
+
+
+            val todayNoonTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis(), 12)
             Logcat.d("timeMillis>>>todayNoonTimeMillis:${TimeUtil.formatDateTime(todayNoonTimeMillis)}")
 
             val nowTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis())
             Logcat.d("nowTimeMillis>>>nowTimeMillis:${TimeUtil.formatDateTime(nowTimeMillis)}")
-            val nowAfterHalfHourTimeMillis = TimeUtil.getDateTimeMillis(System.currentTimeMillis() + HALF_HOUR)
+            val nowAfterHalfHourTimeMillis = TimeUtil.getDateMinuteTimeMillis(System.currentTimeMillis() + HALF_HOUR)
             Logcat.d("nowAfterHalfHourTimeMillis>>>nowAfterHalfHourTimeMillis:${TimeUtil.formatDateTime(nowAfterHalfHourTimeMillis)}")
 
 
-//            val earlyMorningTime = calendar.timeInMillis
+//            val earlyMorningTime = earlyMorningCalendar.timeInMillis
 
             val step = ONE_HOUR * 3L
-            val calendar4 = Calendar.getInstance()
-            for ((index, item) in (stackBarDataList step 6).withIndex()) {
-                val time = mStartTime + index * step
-                calendar4.clear()
-                calendar4.timeInMillis = time
-                calendar4[Calendar.MILLISECOND] = 0
-                calendar4[Calendar.SECOND] = 0
-                calendar4[Calendar.MINUTE] = 0
-                Logcat.d(
-                    "calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)}," +
-                            "index:$index,mBarWidth:$mBarWidth,mBottomTextWidth:$mBottomTextWidth"
-                )
-                val timeText = when (calendar4.timeInMillis) {
-                    nowTimeMillis, nowAfterHalfHourTimeMillis -> "现在"
-//                        earlyMorningTime -> "凌晨"
-                    todayNoonTimeMillis -> "12点"
-
-                    else -> TimeUtil.formatHourTime(time)
+            val calendar = Calendar.getInstance()
+            var hasNoonTime: Boolean
+            for ((index, item) in (startTime..(endTime) step step).withIndex()) {
+                calendar.clear()
+                calendar.timeInMillis = item
+                calendar[Calendar.MILLISECOND] = 0
+                calendar[Calendar.SECOND] = 0
+                calendar[Calendar.MINUTE] = 0
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar.timeInMillis)},index:$index,mBarWidth:$mBarWidth,mBottomTextWidth:$mBottomTextWidth")
+                var startX = x + index * mBarWidth * 6f
+                val curTimeMillis = calendar.timeInMillis
+                Logcat.d("calendar4>>>curTimeMillis:$curTimeMillis,nowTimeMillis:$nowTimeMillis")
+                val timeText = when (curTimeMillis) {
+                    nowTimeMillis, nowAfterHalfHourTimeMillis -> getString(R.string.power_battery_now)
+//                    earlyMorningTime -> "凌晨"
+                    todayNoonTimeMillis -> getString(R.string.power_battery_noon)
+                    else -> TimeUtil.formatHourTime(item)
                 }
-                var startX = item.x
-                startX += if (index == 0) mBarWidth else if (index == 8) mBarWidth * 3 / 2f else mBarWidth / 2f
-                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar4.timeInMillis)},index:$index,startX:$startX")
-                arrayList.add(TimeLabel(mBottomTextPaint, startX, y + mBottomTextHeight / 3f, timeText))
+                hasNoonTime = curTimeMillis == todayNoonTimeMillis
+                val textWidth = mBottomTextPaint.measureText(timeText)
+                startX += when {
+                    hasNoonTime -> textWidth / 4f
+                    index == 8 -> textWidth / 3f
+                    else -> textWidth / 2f
+                }
+                Logcat.d("calendar4>>>time1:${TimeUtil.formatDateTime(calendar.timeInMillis)},index:$index,startX:$startX")
+                arrayList.add(TimeLabel(mBottomTextPaint, startX, y, timeText))
             }
         }
         return arrayList

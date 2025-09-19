@@ -26,4 +26,7 @@
     <string name="consumption_time">耗电时段</string>
     <string name="battery_level">电池电量</string>
     <string name="screen_on_time_today">今日亮屏时长</string>
+    <string name="power_battery_now">现在</string>
+    <string name="power_battery_noon">12点</string>
+
 </resources>

@@ -109,4 +109,12 @@ object TimeUtil {
         calendar[Calendar.MINUTE] = 0
         return calendar.timeInMillis
     }
+    fun getDateMinuteTimeMillis(time: Long): Long {
+        val calendar = Calendar.getInstance()
+        calendar.timeInMillis = time
+        calendar[Calendar.MILLISECOND] = 0
+        calendar[Calendar.SECOND] = 0
+//        calendar[Calendar.MINUTE] = 0
+        return calendar.timeInMillis
+    }
 }
